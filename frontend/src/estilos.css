@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #raiz {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-papel text-tinta font-sans;
+    /* Cifras tabulares en toda la aplicacion: los pesos y las fechas no bailan
+       entre filas de una lista. */
+    font-feature-settings: 'tnum' 1;
+    font-variation-settings:
+      'wdth' 100,
+      'wght' 450;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-[3px] ring-pastoClaro ring-offset-2 ring-offset-papel;
+  }
+
+  /* Quita la cruz de limpiar de los campos de busqueda: con guantes no se acierta. */
+  input[type='search']::-webkit-search-cancel-button {
+    display: none;
+  }
+}
+
+@layer components {
+  /* Los pesos de la variable Archivo se piden por eje, no por clase. */
+  .peso-fuerte {
+    font-variation-settings:
+      'wdth' 92,
+      'wght' 720;
+  }
+  .peso-medio {
+    font-variation-settings: 'wght' 620;
+  }
+  .peso-titulo {
+    font-variation-settings:
+      'wdth' 94,
+      'wght' 700;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

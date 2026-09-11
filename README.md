@@ -30,6 +30,20 @@ Abre <http://localhost:5173> y entra con:
 
 La documentacion viva de la API esta en <http://localhost:8000/docs>.
 
+### Verlo en el telefono
+
+```bash
+make movil
+```
+
+Imprime la direccion de este equipo en la red local; abrela desde el telefono
+conectado al mismo WiFi. Solo se expone el frontend: la API sigue escuchando en
+`localhost` y el proxy de Vite la alcanza desde el propio servidor.
+
+Ojo: por `http://` en una IP de red local el navegador **no** considera la
+pagina un contexto seguro, asi que no se puede instalar como aplicacion ni
+registrar un service worker. Para eso hace falta HTTPS o `localhost`.
+
 > **El puerto es el 5433, no el 5432**, porque en muchas maquinas el 5432 ya lo
 > ocupa un Postgres instalado en el sistema. Se cambia con `POSTGRES_PUERTO` en
 > `.env`.

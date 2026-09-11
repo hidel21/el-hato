@@ -47,6 +47,14 @@ Las crea `scripts/seed.py` sobre la finca «La Guacamaya».
 
 ## Tareas frecuentes
 
+Verlo en el telefono, en la misma red WiFi:
+
+    make movil
+
+Expone solo el frontend. La API sigue en localhost y la alcanza el proxy de
+Vite desde el servidor. Por http en una IP de red local no hay contexto seguro:
+no se puede instalar como PWA ni registrar un service worker.
+
 Resetear la base sin borrar el volumen:
 
     make reiniciar-base

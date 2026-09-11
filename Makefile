@@ -9,7 +9,9 @@ PY    := $(VENV)/bin/python
 PIP   := $(VENV)/bin/pip
 ALEMBIC := cd backend && ../$(VENV)/bin/alembic
 
-.PHONY: preparar correr api web sembrar migrar reiniciar-base tests linter formato limpiar
+.PHONY: preparar correr movil api web sembrar migrar reiniciar-base tests linter formato limpiar
+
+IP := $(shell ip -4 -o addr show scope global 2>/dev/null | grep -v docker | grep -v br- | awk '{print $$4}' | cut -d/ -f1 | head -1)
 
 ## Instala todo y deja la base lista con la finca demo.
 preparar:
@@ -30,6 +32,19 @@ correr:
 	@$(VENV)/bin/uvicorn --app-dir backend app.main:app --reload --port 8000 & \
 	PID_API=$$!; \
 	(cd frontend && npm run dev) & \
+	PID_WEB=$$!; \
+	trap 'kill $$PID_API $$PID_WEB 2>/dev/null' INT TERM EXIT; \
+	wait
+
+## Igual que correr, pero el frontend queda visible en la red local.
+## La API NO se expone: el proxy de Vite la alcanza desde el propio servidor.
+movil:
+	@echo "En este equipo       http://localhost:5173"
+	@echo "Desde el telefono    http://$(IP):5173   (misma red WiFi)"
+	@echo ""
+	@$(VENV)/bin/uvicorn --app-dir backend app.main:app --reload --port 8000 & \
+	PID_API=$$!; \
+	(cd frontend && npm run dev -- --host) & \
 	PID_WEB=$$!; \
 	trap 'kill $$PID_API $$PID_WEB 2>/dev/null' INT TERM EXIT; \
 	wait

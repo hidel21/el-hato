@@ -1,0 +1,23 @@
+# Docker solo para Postgres. La aplicacion corre en el host.
+services:
+  base_datos:
+    image: postgres:16-alpine
+    container_name: ganaderia_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USUARIO:-ganaderia}
+      POSTGRES_PASSWORD: ${POSTGRES_CLAVE:-ganaderia}
+      POSTGRES_DB: ${POSTGRES_BASE:-ganaderia}
+    ports:
+      - "${POSTGRES_PUERTO:-5432}:5432"
+    volumes:
+      - datos_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USUARIO:-ganaderia} -d ${POSTGRES_BASE:-ganaderia}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  datos_postgres:
+    name: ganaderia_datos_postgres

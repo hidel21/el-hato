@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hato — maqueta de interfaz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --papel:#F4F6F0;
+  --superficie:#FFFFFF;
+  --tinta:#121A15;
+  --hierro:#66756B;
+  --borde:#DFE4D9;
+  --pasto:#0E3B2A;
+  --pasto-claro:#1C6647;
+  --caravana:#FFC800;
+  --caravana-sombra:#C99A00;
+  --vencido:#B22D1C;
+  --pronto:#B57200;
+  --ok:#256F4E;
+  --sinenviar:#3E6494;
+
+  --r-chip:4px;
+  --r-caja:10px;
+  --tap:52px;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--papel);
+  color:var(--tinta);
+  font-family:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
+  font-variation-settings:'wdth' 100,'wght' 450;
+  font-size:16px;
+  line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+  font-feature-settings:'tnum' 1;
+}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input{font:inherit}
+:focus-visible{outline:3px solid var(--pasto-claro);outline-offset:2px;border-radius:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- estructura ---------- */
+.app{min-height:100dvh;display:flex;flex-direction:column}
+.rail{display:none}
+
+.topbar{
+  position:sticky;top:0;z-index:40;
+  background:var(--pasto);color:#EDF3EE;
+  padding:10px 14px calc(10px + env(safe-area-inset-top,0)) 14px;
+  padding-top:calc(10px + env(safe-area-inset-top,0));
+}
+.topbar-fila{display:flex;align-items:center;gap:10px}
+.finca{display:flex;flex-direction:column;min-width:0;flex:1}
+.finca b{font-variation-settings:'wght' 650;font-size:15px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.finca span{font-size:12.5px;color:#A9C4B4}
+
+.sync{
+  display:flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,.11);
+  border:1px solid rgba(255,255,255,.18);
+  padding:7px 11px;border-radius:999px;
+  font-size:13px;font-variation-settings:'wght' 550;
+  white-space:nowrap;
+}
+.sync .punto{width:9px;height:9px;border-radius:50%;background:#6FD39F;flex:none}
+.sync[data-estado="pendiente"] .punto{background:var(--caravana)}
+.sync[data-estado="offline"]{background:rgba(255,200,0,.14);border-color:rgba(255,200,0,.4)}
+.sync[data-estado="offline"] .punto{background:var(--caravana)}
+.sync[data-estado="enviando"] .punto{background:#8FD2FF;animation:late 1s ease-in-out infinite}
+@keyframes late{0%,100%{opacity:1}50%{opacity:.25}}
+
+.banda-offline{
+  display:none;background:var(--caravana);color:#3A2C00;
+  font-size:13px;font-variation-settings:'wght' 600;
+  padding:7px 14px;
+}
+body[data-conexion="off"] .banda-offline{display:block}
+
+main{flex:1;padding:16px 14px 96px 14px;max-width:1180px;width:100%;margin:0 auto}
+.pantalla{display:none}
+.pantalla.activa{display:block}
+
+/* ---------- tipografía / bloques ---------- */
+h1{font-size:26px;line-height:1.15;letter-spacing:-.02em;font-variation-settings:'wght' 720,'wdth' 92;margin:0 0 2px}
+h2{font-size:15px;letter-spacing:-.005em;font-variation-settings:'wght' 650;margin:26px 0 10px;color:var(--tinta)}
+h2:first-of-type{margin-top:18px}
+.sub{color:var(--hierro);font-size:13.5px;margin:0 0 16px}
+
+.caja{background:var(--superficie);border:1px solid var(--borde);border-radius:var(--r-caja)}
+.lista{background:var(--superficie);border:1px solid var(--borde);border-radius:var(--r-caja);overflow:hidden}
+.lista>*+*{border-top:1px solid var(--borde)}
+
+/* ---------- caravana (la pieza de identidad) ---------- */
+.caravana{
+  display:inline-flex;align-items:center;justify-content:center;
+  background:var(--caravana);
+  color:#241B00;
+  border-radius:var(--r-chip);
+  border-bottom:2px solid var(--caravana-sombra);
+  padding:3px 8px 2px;
+  font-variation-settings:'wght' 800,'wdth' 85;
+  font-size:14px;letter-spacing:.01em;
+  white-space:nowrap;
+}
+.caravana.grande{font-size:23px;padding:6px 13px 4px;border-bottom-width:3px}
+.caravana.chica{font-size:12px;padding:2px 6px 1px}
+
+/* ---------- filas ---------- */
+.fila{
+  display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+  padding:12px 14px;min-height:var(--tap);background:none;
+}
+.fila:hover{background:#FAFBF7}
+.fila-cuerpo{flex:1;min-width:0}
+.fila-titulo{font-variation-settings:'wght' 600;font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fila-meta{color:var(--hierro);font-size:13px;margin-top:1px}
+.fila-der{text-align:right;flex:none}
+.fila-der b{display:block;font-variation-settings:'wght' 650;font-size:15px}
+.fila-der span{display:block;color:var(--hierro);font-size:12.5px}
+
+.marca{width:4px;align-self:stretch;border-radius:2px;flex:none;background:var(--borde)}
+.marca.vencido{background:var(--vencido)}
+.marca.pronto{background:var(--pronto)}
+.marca.ok{background:var(--ok)}
+
+/* ---------- etiquetas de estado ---------- */
+.et{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:12px;font-variation-settings:'wght' 600;
+  padding:2px 8px;border-radius:999px;border:1px solid var(--borde);color:var(--hierro);
+  background:#F7F9F4;
+}
+.et.vencido{color:var(--vencido);border-color:#EDC7C1;background:#FDF3F1}
+.et.pronto{color:var(--pronto);border-color:#EEDCBC;background:#FEF8EC}
+.et.ok{color:var(--ok);border-color:#C6E0D2;background:#F1F8F4}
+.et.sinenviar{color:var(--sinenviar);border-color:#C9D7E8;background:#F2F6FB}
+
+/* ---------- tarjetas de resumen ---------- */
+.cifras{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--borde);border:1px solid var(--borde);border-radius:var(--r-caja);overflow:hidden}
+.cifra{background:var(--superficie);padding:12px 14px}
+.cifra b{display:block;font-size:24px;line-height:1.1;font-variation-settings:'wght' 700,'wdth' 90}
+.cifra span{display:block;color:var(--hierro);font-size:12.5px;margin-top:2px}
+
+/* ---------- acciones rápidas ---------- */
+.acciones{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.accion{
+  background:var(--superficie);border:1px solid var(--borde);border-radius:var(--r-caja);
+  padding:12px 6px;display:flex;flex-direction:column;align-items:center;gap:6px;
+  font-size:12.5px;font-variation-settings:'wght' 600;min-height:74px;justify-content:center;
+}
+.accion:hover{border-color:var(--pasto-claro)}
+.accion svg{width:22px;height:22px;stroke:var(--pasto);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- buscador y filtros ---------- */
+.buscador{display:flex;align-items:center;gap:10px;background:var(--superficie);border:1px solid var(--borde);border-radius:var(--r-caja);padding:0 12px;min-height:var(--tap)}
+.buscador input{flex:1;border:none;background:none;outline:none;min-width:0;padding:14px 0;font-size:16px}
+.buscador svg{width:19px;height:19px;stroke:var(--hierro);fill:none;stroke-width:1.8;flex:none}
+
+.filtros{display:flex;gap:7px;overflow-x:auto;padding:12px 0 4px;margin:0 -14px;padding-left:14px;padding-right:14px;scrollbar-width:none}
+.filtros::-webkit-scrollbar{display:none}
+.filtro{
+  flex:none;border:1px solid var(--borde);background:var(--superficie);
+  padding:7px 13px;border-radius:999px;font-size:13.5px;font-variation-settings:'wght' 550;white-space:nowrap;
+}
+.filtro[aria-pressed="true"]{background:var(--pasto);color:#fff;border-color:var(--pasto)}
+
+/* ---------- ficha ---------- */
+.volver{display:inline-flex;align-items:center;gap:6px;color:var(--hierro);font-size:14px;font-variation-settings:'wght' 550;padding:8px 0;margin-bottom:4px}
+.volver svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+.ficha-cabeza{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+.datos{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--borde);border:1px solid var(--borde);border-radius:var(--r-caja);overflow:hidden;margin-top:14px}
+.dato{background:var(--superficie);padding:10px 13px}
+.dato span{display:block;color:var(--hierro);font-size:12px}
+.dato b{display:block;font-variation-settings:'wght' 620;font-size:15px;margin-top:1px}
+
+.tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--borde);margin:20px -14px 0;padding:0 14px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;padding:11px 12px;font-size:14px;font-variation-settings:'wght' 550;color:var(--hierro);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab[aria-selected="true"]{color:var(--tinta);border-bottom-color:var(--caravana);font-variation-settings:'wght' 680}
+.panel{display:none;padding-top:16px}
+.panel.activo{display:block}
+
+.grafico{background:var(--superficie);border:1px solid var(--borde);border-radius:var(--r-caja);padding:14px}
+.grafico svg{width:100%;height:132px;display:block;overflow:visible}
+.leyenda{display:flex;gap:16px;margin-top:10px;font-size:13px;color:var(--hierro)}
+.leyenda b{color:var(--tinta);font-variation-settings:'wght' 650}
+
+.genealogia{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.pariente{background:var(--superficie);border:1px solid var(--borde);border-radius:var(--r-caja);padding:11px 13px}
+.pariente span{display:block;color:var(--hierro);font-size:12px;margin-bottom:5px}
+
+/* ---------- potreros ---------- */
+.potrero{padding:14px}
+.potrero-cabeza{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.potrero-cabeza b{font-size:16px;font-variation-settings:'wght' 650}
+.potrero-cabeza span{color:var(--hierro);font-size:13px}
+.barra{height:9px;background:#EDF0E8;border-radius:999px;margin:11px 0 6px;overflow:hidden;position:relative}
+.barra i{display:block;height:100%;background:var(--pasto-claro);border-radius:999px}
+.barra i.alto{background:var(--pronto)}
+.barra i.excedido{background:var(--vencido)}
+.barra-pie{display:flex;justify-content:space-between;font-size:12.5px;color:var(--hierro)}
+
+/* ---------- botones ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:46px;padding:0 18px;border-radius:8px;
+  font-variation-settings:'wght' 650;font-size:15px;
+  background:var(--pasto);color:#fff;border:1px solid var(--pasto);
+}
+.btn.suave{background:var(--superficie);color:var(--tinta);border-color:var(--borde)}
+.btn.amarillo{background:var(--caravana);color:#241B00;border-color:var(--caravana-sombra)}
+.btn.bloque{width:100%}
+.btn.chico{min-height:36px;padding:0 12px;font-size:13.5px}
+
+/* ---------- barra inferior ---------- */
+.tabbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;
+  background:var(--superficie);border-top:1px solid var(--borde);
+  display:grid;grid-template-columns:repeat(5,1fr);align-items:center;
+  padding-bottom:env(safe-area-inset-bottom,0);
+}
+.tabbar button{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:9px 2px;font-size:11px;color:var(--hierro);font-variation-settings:'wght' 550;min-height:58px;justify-content:center;
+}
+.tabbar button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tabbar button[aria-current="page"]{color:var(--pasto)}
+.tabbar button[aria-current="page"] svg{stroke-width:2.1}
+.tabbar .central{color:#241B00}
+.tabbar .central .redondo{
+  width:46px;height:46px;border-radius:14px;background:var(--caravana);
+  border-bottom:2px solid var(--caravana-sombra);
+  display:flex;align-items:center;justify-content:center;
+}
+.tabbar .central .redondo svg{stroke:#241B00;stroke-width:2.4;width:24px;height:24px}
+
+/* ---------- hoja de registro ---------- */
+.fondo{position:fixed;inset:0;background:rgba(12,22,17,.5);z-index:50;opacity:0;pointer-events:none;transition:opacity .18s}
+.fondo.abierta{opacity:1;pointer-events:auto}
+.hoja{
+  position:fixed;left:0;right:0;bottom:0;z-index:51;
+  background:var(--papel);border-radius:16px 16px 0 0;
+  padding:8px 14px calc(20px + env(safe-area-inset-bottom,0));
+  transform:translateY(100%);transition:transform .22s cubic-bezier(.2,.7,.3,1);
+  max-height:88dvh;overflow:auto;
+}
+.hoja.abierta{transform:translateY(0)}
+.agarre{width:38px;height:4px;background:#CBD3C6;border-radius:999px;margin:6px auto 14px}
+.hoja h3{margin:0 0 3px;font-size:19px;font-variation-settings:'wght' 700,'wdth' 94}
+.hoja p{margin:0 0 14px;color:var(--hierro);font-size:13.5px}
+.opciones{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.opcion{
+  background:var(--superficie);border:1px solid var(--borde);border-radius:var(--r-caja);
+  padding:14px 13px;display:flex;align-items:center;gap:11px;text-align:left;min-height:66px;
+  font-variation-settings:'wght' 620;font-size:14.5px;
+}
+.opcion:hover{border-color:var(--pasto-claro)}
+.opcion svg{width:22px;height:22px;stroke:var(--pasto);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.opcion i{display:block;font-style:normal;color:var(--hierro);font-size:12px;font-variation-settings:'wght' 450;margin-top:1px}
+
+/* ---------- avisos ---------- */
+.aviso{
+  position:fixed;left:14px;right:14px;bottom:78px;z-index:60;
+  background:var(--tinta);color:#F2F5F0;border-radius:10px;padding:12px 14px;
+  font-size:14px;display:flex;align-items:center;gap:10px;
+  transform:translateY(14px);opacity:0;pointer-events:none;transition:.2s;
+}
+.aviso.visible{transform:none;opacity:1}
+.aviso .et{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#CFE0D5}
+
+.vacio{padding:34px 18px;text-align:center;color:var(--hierro)}
+.vacio b{display:block;color:var(--tinta);font-variation-settings:'wght' 650;margin-bottom:4px;font-size:15.5px}
+
+.interruptor{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#A9C4B4;cursor:pointer;user-select:none}
+.interruptor input{appearance:none;width:34px;height:20px;border-radius:999px;background:rgba(255,255,255,.2);position:relative;cursor:pointer;transition:.15s;flex:none;margin:0}
+.interruptor input::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff;transition:.15s}
+.interruptor input:checked{background:var(--caravana)}
+.interruptor input:checked::after{transform:translateX(14px)}
+
+/* ---------- escritorio ---------- */
+@media (min-width:900px){
+  body{font-size:15.5px}
+  .app{flex-direction:row}
+  .tabbar{display:none}
+  .rail{
+    display:flex;flex-direction:column;gap:4px;
+    width:224px;flex:none;background:var(--pasto);color:#CFE0D5;
+    padding:18px 12px;position:sticky;top:0;height:100dvh;
+  }
+  .rail .marca-app{display:flex;align-items:center;gap:9px;padding:0 8px 18px;color:#fff}
+  .rail .marca-app b{font-size:18px;font-variation-settings:'wght' 750,'wdth' 88;letter-spacing:-.01em}
+  .rail button{
+    display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:8px;
+    font-size:14.5px;font-variation-settings:'wght' 550;color:#BFD5C8;width:100%;text-align:left;
+  }
+  .rail button svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  .rail button:hover{background:rgba(255,255,255,.07);color:#fff}
+  .rail button[aria-current="page"]{background:rgba(255,255,255,.13);color:#fff;font-variation-settings:'wght' 650}
+  .rail .registrar{background:var(--caravana);color:#241B00;margin-top:12px;font-variation-settings:'wght' 680;justify-content:center;border-bottom:2px solid var(--caravana-sombra)}
+  .rail .registrar svg{stroke:#241B00;stroke-width:2.2}
+  .rail .pie{margin-top:auto;padding:12px 10px;border-top:1px solid rgba(255,255,255,.14)}
+
+  .contenedor{flex:1;min-width:0;display:flex;flex-direction:column}
+  .topbar{padding:12px 24px}
+  main{padding:22px 24px 40px}
+  .cifras{grid-template-columns:repeat(4,1fr)}
+  .acciones{grid-template-columns:repeat(4,1fr);max-width:560px}
+  .datos{grid-template-columns:repeat(4,1fr)}
+  .opciones{grid-template-columns:repeat(3,1fr)}
+  .hoja{left:50%;right:auto;bottom:auto;top:50%;width:640px;border-radius:14px;transform:translate(-50%,-46%) scale(.97);opacity:0;padding:18px 22px 24px}
+  .hoja.abierta{transform:translate(-50%,-50%) scale(1);opacity:1}
+  .agarre{display:none}
+  .aviso{left:auto;right:24px;bottom:24px;max-width:420px}
+  .filtros{margin:0;padding:12px 0 4px}
+  .tabs{margin:20px 0 0;padding:0}
+}
+
+@media (min-width:1100px){
+  .doble{display:grid;grid-template-columns:minmax(320px,380px) 1fr;gap:24px;align-items:start}
+  .doble>.columna-detalle{position:sticky;top:22px}
+}
+</style>
+</head>
+<body data-conexion="on">
+
+<div class="app">
+
+  <!-- ===== navegación de escritorio ===== -->
+  <aside class="rail">
+    <div class="marca-app">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#FFC800" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5c0 4 1 6 3 7M20 5c0 4-1 6-3 7"/><path d="M7 12c0 3.5 2.2 6 5 6s5-2.5 5-6"/><circle cx="10" cy="13" r=".6" fill="#FFC800"/><circle cx="14" cy="13" r=".6" fill="#FFC800"/></svg>
+      <b>Hato</b>
+    </div>
+    <button data-ir="hoy" aria-current="page"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9h13v-9"/></svg>Hoy</button>
+    <button data-ir="animales"><svg viewBox="0 0 24 24"><path d="M4 6c0 3.5.8 5.4 2.6 6.4M19.4 6c0 3.5-.8 5.4-2.6 6.4"/><path d="M6.6 12.4c0 3.4 2.4 5.8 5.4 5.8s5.4-2.4 5.4-5.8"/></svg>Animales</button>
+    <button data-ir="alertas"><svg viewBox="0 0 24 24"><path d="M12 3a5.5 5.5 0 0 0-5.5 5.5c0 4-1.5 5.5-1.5 5.5h14s-1.5-1.5-1.5-5.5A5.5 5.5 0 0 0 12 3Z"/><path d="M10.2 18a2 2 0 0 0 3.6 0"/></svg>Alertas</button>
+    <button data-ir="potreros"><svg viewBox="0 0 24 24"><path d="M3 20V9l9-5 9 5v11"/><path d="M3 14h18M12 4v16"/></svg>Potreros</button>
+    <button data-ir="inventario"><svg viewBox="0 0 24 24"><path d="M4 7h16v13H4z"/><path d="M4 11h16M9 7V4h6v3"/></svg>Inventario</button>
+    <button class="registrar" data-abrir-hoja><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Registrar</button>
+    <div class="pie">
+      <label class="interruptor"><input type="checkbox" id="sw-conexion2"> Simular sin señal</label>
+    </div>
+  </aside>
+
+  <div class="contenedor">
+
+    <!-- ===== barra superior ===== -->
+    <header class="topbar">
+      <div class="topbar-fila">
+        <div class="finca">
+          <b>Finca La Guacamaya</b>
+          <span>Rubén Salcedo · Capataz</span>
+        </div>
+        <label class="interruptor" id="sw-movil"><input type="checkbox" id="sw-conexion"> Sin señal</label>
+        <button class="sync" id="sync" data-estado="pendiente">
+          <i class="punto"></i><span id="sync-texto">3 sin enviar</span>
+        </button>
+      </div>
+    </header>
+    <div class="banda-offline">Sin señal. Todo lo que registres se guarda en el teléfono y se envía solo cuando vuelva la conexión.</div>
+
+    <main id="contenido">
+
+      <!-- ============ HOY ============ -->
+      <section class="pantalla activa" data-pantalla="hoy">
+        <h1>Viernes 11 de septiembre</h1>
+        <p class="sub">Tienes 16 tareas de campo pendientes para hoy.</p>
+
+        <div class="cifras">
+          <div class="cifra"><b>328</b><span>Animales activos</span></div>
+          <div class="cifra"><b>142</b><span>Vientres</span></div>
+          <div class="cifra"><b>96</b><span>En engorde</span></div>
+          <div class="cifra"><b>0,62</b><span>GDP promedio kg/día</span></div>
+        </div>
+
+        <h2>Registrar en el potrero</h2>
+        <div class="acciones">
+          <button class="accion" data-registrar="Pesaje">
+            <svg viewBox="0 0 24 24"><path d="M4 20h16L18 7H6L4 20Z"/><path d="M12 7V4"/><path d="M9 12.5 12 16l4-6"/></svg>Pesaje</button>
+          <button class="accion" data-registrar="Vacuna">
+            <svg viewBox="0 0 24 24"><path d="m15 4 5 5M17.5 6.5 9 15l-3 1 1-3 8.5-8.5"/><path d="m4 20 2-2"/></svg>Vacuna</button>
+          <button class="accion" data-registrar="Celo">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="5"/><path d="M12 14v7M9 18h6"/></svg>Celo</button>
+          <button class="accion" data-registrar="Baño">
+            <svg viewBox="0 0 24 24"><path d="M12 3c3 4 5 6.2 5 9a5 5 0 0 1-10 0c0-2.8 2-5 5-9Z"/></svg>Baño</button>
+        </div>
+
+        <h2>Vence hoy</h2>
+        <div class="lista">
+          <button class="fila" data-ir="alertas">
+            <i class="marca vencido"></i>
+            <div class="fila-cuerpo">
+              <div class="fila-titulo">12 refuerzos de aftosa</div>
+              <div class="fila-meta">Lote Levante Norte · vencieron hace 2 días</div>
+            </div>
+            <div class="fila-der"><span class="et vencido">Vencido</span></div>
+          </button>
+          <button class="fila" data-ir="alertas">
+            <i class="marca pronto"></i>
+            <div class="fila-cuerpo">
+              <div class="fila-titulo">4 partos esta semana</div>
+              <div class="fila-meta">El primero: <b>C-0412</b> el domingo 13</div>
+            </div>
+            <div class="fila-der"><span class="et pronto">Esta semana</span></div>
+          </button>
+          <button class="fila" data-ir="potreros">
+            <i class="marca pronto"></i>
+            <div class="fila-cuerpo">
+              <div class="fila-titulo">La Ceiba lleva 41 días ocupado</div>
+              <div class="fila-meta">Se recomienda rotar a los 35 días</div>
+            </div>
+            <div class="fila-der"><span class="et pronto">Rotar</span></div>
+          </button>
+        </div>
+
+        <h2>Lo que registraste hoy</h2>
+        <div class="lista" id="bitacora">
+          <div class="fila">
+            <span class="caravana chica">C-0871</span>
+            <div class="fila-cuerpo">
+              <div class="fila-titulo">Pesaje 418 kg</div>
+              <div class="fila-meta">Hace 25 min · en el corral de manejo</div>
+            </div>
+            <div class="fila-der"><span class="et sinenviar">Sin enviar</span></div>
+          </div>
+          <div class="fila">
+            <span class="caravana chica">C-0412</span>
+            <div class="fila-cuerpo">
+              <div class="fila-titulo">Celo detectado, intensidad alta</div>
+              <div class="fila-meta">Hace 1 h · Rubén Salcedo</div>
+            </div>
+            <div class="fila-der"><span class="et sinenviar">Sin enviar</span></div>
+          </div>
+          <div class="fila">
+            <span class="caravana chica">Lote</span>
+            <div class="fila-cuerpo">
+              <div class="fila-titulo">Baño garrapaticida a 34 animales</div>
+              <div class="fila-meta">Hace 3 h · Levante Norte</div>
+            </div>
+            <div class="fila-der"><span class="et ok">Enviado</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ ANIMALES + FICHA ============ -->
+      <section class="pantalla" data-pantalla="animales">
+        <div class="doble">
+          <div class="columna-lista">
+            <h1>Animales</h1>
+            <p class="sub">328 activos · 3 con cambios sin enviar</p>
+
+            <div class="buscador">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg>
+              <input id="buscar" type="search" placeholder="Buscar por arete o nombre" autocomplete="off">
+            </div>
+
+            <div class="filtros" role="group" aria-label="Filtros">
+              <button class="filtro" data-filtro="todos" aria-pressed="true">Todos</button>
+              <button class="filtro" data-filtro="vientre" aria-pressed="false">Vientres</button>
+              <button class="filtro" data-filtro="engorde" aria-pressed="false">Engorde</button>
+              <button class="filtro" data-filtro="ternero" aria-pressed="false">Terneros</button>
+              <button class="filtro" data-filtro="sinenviar" aria-pressed="false">Sin enviar</button>
+            </div>
+
+            <div class="lista" id="lista-animales" style="margin-top:8px"></div>
+          </div>
+
+          <div class="columna-detalle" id="detalle-escritorio"></div>
+        </div>
+      </section>
+
+      <!-- ============ FICHA (móvil) ============ -->
+      <section class="pantalla" data-pantalla="ficha">
+        <button class="volver" data-ir="animales"><svg viewBox="0 0 24 24"><path d="m14 6-6 6 6 6"/></svg>Animales</button>
+        <div id="ficha-movil"></div>
+      </section>
+
+      <!-- ============ ALERTAS ============ -->
+      <section class="pantalla" data-pantalla="alertas">
+        <h1>Alertas</h1>
+        <p class="sub">Se recalculan en el teléfono aunque no haya señal.</p>
+
+        <h2>Vencidas</h2>
+        <div class="lista" id="alertas-vencidas"></div>
+
+        <h2>Esta semana</h2>
+        <div class="lista" id="alertas-semana"></div>
+
+        <h2>Próximas</h2>
+        <div class="lista" id="alertas-proximas"></div>
+      </section>
+
+      <!-- ============ POTREROS ============ -->
+      <section class="pantalla" data-pantalla="potreros">
+        <h1>Potreros</h1>
+        <p class="sub">148 hectáreas · carga actual 1,4 UGM/ha</p>
+        <div class="lista" id="lista-potreros"></div>
+      </section>
+
+      <!-- ============ INVENTARIO ============ -->
+      <section class="pantalla" data-pantalla="inventario">
+        <h1>Inventario del hato</h1>
+        <p class="sub">Conteo al 11 de septiembre, calculado desde las fichas.</p>
+        <div class="cifras">
+          <div class="cifra"><b>328</b><span>Total activos</span></div>
+          <div class="cifra"><b>203</b><span>Hembras</span></div>
+          <div class="cifra"><b>125</b><span>Machos</span></div>
+          <div class="cifra"><b>6</b><span>Toros</span></div>
+        </div>
+        <h2>Por etapa</h2>
+        <div class="lista" id="lista-inventario"></div>
+      </section>
+
+    </main>
+
+    <!-- ===== barra inferior (móvil) ===== -->
+    <nav class="tabbar" aria-label="Secciones">
+      <button data-ir="hoy" aria-current="page"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9h13v-9"/></svg>Hoy</button>
+      <button data-ir="animales"><svg viewBox="0 0 24 24"><path d="M4 6c0 3.5.8 5.4 2.6 6.4M19.4 6c0 3.5-.8 5.4-2.6 6.4"/><path d="M6.6 12.4c0 3.4 2.4 5.8 5.4 5.8s5.4-2.4 5.4-5.8"/></svg>Animales</button>
+      <button class="central" data-abrir-hoja aria-label="Registrar">
+        <span class="redondo"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+      </button>
+      <button data-ir="alertas"><svg viewBox="0 0 24 24"><path d="M12 3a5.5 5.5 0 0 0-5.5 5.5c0 4-1.5 5.5-1.5 5.5h14s-1.5-1.5-1.5-5.5A5.5 5.5 0 0 0 12 3Z"/><path d="M10.2 18a2 2 0 0 0 3.6 0"/></svg>Alertas</button>
+      <button data-ir="potreros"><svg viewBox="0 0 24 24"><path d="M3 20V9l9-5 9 5v11"/><path d="M3 14h18M12 4v16"/></svg>Potreros</button>
+    </nav>
+
+  </div>
+</div>
+
+<!-- ===== hoja de registro rápido ===== -->
+<div class="fondo" id="fondo"></div>
+<div class="hoja" id="hoja" role="dialog" aria-modal="true" aria-labelledby="hoja-titulo">
+  <div class="agarre"></div>
+  <h3 id="hoja-titulo">Registrar en campo</h3>
+  <p>Se guarda en el teléfono al instante. La señal no hace falta.</p>
+  <div class="opciones">
+    <button class="opcion" data-registrar="Pesaje"><svg viewBox="0 0 24 24"><path d="M4 20h16L18 7H6L4 20Z"/><path d="M12 7V4"/><path d="M9 12.5 12 16l4-6"/></svg><span>Pesaje<i>Calcula la GDP sola</i></span></button>
+    <button class="opcion" data-registrar="Vacuna"><svg viewBox="0 0 24 24"><path d="m15 4 5 5M17.5 6.5 9 15l-3 1 1-3 8.5-8.5"/><path d="m4 20 2-2"/></svg><span>Vacuna<i>Individual o por lote</i></span></button>
+    <button class="opcion" data-registrar="Celo"><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="5"/><path d="M12 14v7M9 18h6"/></svg><span>Celo<i>Abre el servicio después</i></span></button>
+    <button class="opcion" data-registrar="Servicio"><svg viewBox="0 0 24 24"><path d="M8 4v6a4 4 0 0 0 8 0V4"/><path d="M12 14v6M9 20h6"/></svg><span>Servicio<i>Monta o inseminación</i></span></button>
+    <button class="opcion" data-registrar="Baño"><svg viewBox="0 0 24 24"><path d="M12 3c3 4 5 6.2 5 9a5 5 0 0 1-10 0c0-2.8 2-5 5-9Z"/></svg><span>Baño<i>Marca la carencia</i></span></button>
+    <button class="opcion" data-registrar="Gasto"><svg viewBox="0 0 24 24"><path d="M12 4v16"/><path d="M15.5 7.5H10a2.5 2.5 0 0 0 0 5h4a2.5 2.5 0 0 1 0 5H8"/></svg><span>Gasto<i>Por animal o por lote</i></span></button>
+    <button class="opcion" data-registrar="Movimiento"><svg viewBox="0 0 24 24"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg><span>Movimiento<i>Cambio de potrero</i></span></button>
+    <button class="opcion" data-registrar="Animal nuevo"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>Animal nuevo<i>Alta de ficha</i></span></button>
+    <button class="opcion" data-registrar="Nacimiento"><svg viewBox="0 0 24 24"><path d="M7 18c0-3 2.2-5 5-5s5 2 5 5"/><circle cx="12" cy="8" r="3"/></svg><span>Nacimiento<i>Crea ficha del ternero</i></span></button>
+  </div>
+  <div style="margin-top:14px"><button class="btn suave bloque" id="cerrar-hoja">Cerrar</button></div>
+</div>
+
+<div class="aviso" id="aviso"><span id="aviso-texto"></span></div>
+
+<script>
+/* ============ datos de demostración ============ */
+const animales = [
+  {arete:'C-0412', nombre:'Estrella', sexo:'hembra', raza:'Brahman', nac:'2021-04-08', etapa:'vientre', grupo:'Vientres A', potrero:'La Ceiba', peso:472, gdp:0.41, estado:'Preñada', pendiente:true,
+   padre:'T-0031 Rayo', madre:'C-0188 Lucera', obs:'Marca en oreja izquierda. Tercer parto.',
+   pesajes:[['12 mar',438],['26 abr',449],['09 jun',457],['21 jul',465],['08 sep',472]],
+   sanidad:[['Aftosa','12 may 2026','Refuerzo 12 nov 2026','ok'],['Carbón sintomático','03 feb 2026','Refuerzo 03 feb 2027','ok'],['Brucelosis','18 ago 2024','Dosis única','ok']],
+   repro:[['Celo detectado','28 nov 2025'],['Servicio · inseminación','29 nov 2025'],['Diagnóstico · preñada','12 ene 2026'],['Parto estimado','13 sep 2026']],
+   gastos:[['Veterinario','Revisión de preñez','18,00'],['Medicamento','Vitamina AD3E','6,50'],['Alimento','Sal mineralizada','12,00']]},
+  {arete:'C-0871', nombre:'Nube', sexo:'hembra', raza:'Gyr x Holstein', nac:'2023-09-02', etapa:'engorde', grupo:'Levante Norte', potrero:'El Palmar', peso:418, gdp:0.78, estado:'Activo', pendiente:true,
+   padre:'T-0044 Trueno', madre:'C-0503 Perla', obs:'Buena conversión. Candidata a vientre.',
+   pesajes:[['15 mar',318],['30 abr',348],['14 jun',372],['25 jul',398],['11 sep',418]],
+   sanidad:[['Aftosa','12 may 2026','Refuerzo 12 nov 2026','ok'],['Garrapaticida','21 ago 2026','Próximo 20 sep 2026','pronto']],
+   repro:[['Sin registros reproductivos','—']],
+   gastos:[['Alimento','Suplemento proteico','24,00'],['Medicamento','Garrapaticida','8,00']]},
+  {arete:'C-1033', nombre:'Canela', sexo:'hembra', raza:'Brahman', nac:'2026-02-19', etapa:'ternero', grupo:'Terneras 26', potrero:'El Palmar', peso:96, gdp:0.64, estado:'Activo', pendiente:false,
+   padre:'T-0031 Rayo', madre:'C-0412 Estrella', obs:'Nacida sin asistencia.',
+   pesajes:[['19 feb',32],['10 abr',52],['02 jun',68],['28 jul',84],['09 sep',96]],
+   sanidad:[['Aftosa','12 may 2026','Refuerzo 12 nov 2026','ok']],
+   repro:[['Sin registros reproductivos','—']],
+   gastos:[['Medicamento','Desparasitante','5,00']]},
+  {arete:'T-0031', nombre:'Rayo', sexo:'macho', raza:'Brahman', nac:'2019-06-30', etapa:'toro', grupo:'Toros', potrero:'La Ceiba', peso:812, gdp:0.05, estado:'Activo', pendiente:false,
+   padre:'—', madre:'—', obs:'Reproductor principal. 38 servicios en 2026.',
+   pesajes:[['10 mar',798],['28 abr',804],['16 jun',806],['30 jul',810],['08 sep',812]],
+   sanidad:[['Aftosa','12 may 2026','Refuerzo 12 nov 2026','ok'],['Carbón sintomático','03 feb 2026','Refuerzo 03 feb 2027','ok']],
+   repro:[['38 servicios registrados','2026'],['Último servicio','02 sep 2026']],
+   gastos:[['Veterinario','Evaluación andrológica','75,00']]},
+  {arete:'C-0503', nombre:'Perla', sexo:'hembra', raza:'Gyr', nac:'2020-11-14', etapa:'vientre', grupo:'Vientres A', potrero:'Buenavista', peso:494, gdp:0.22, estado:'Vacía', pendiente:false,
+   padre:'—', madre:'—', obs:'No repite celo desde julio. Revisar.',
+   pesajes:[['11 mar',486],['25 abr',489],['12 jun',491],['24 jul',492],['09 sep',494]],
+   sanidad:[['Aftosa','12 may 2026','Refuerzo 12 nov 2026','ok'],['Garrapaticida','12 jul 2026','Vencido 10 ago 2026','vencido']],
+   repro:[['Celo detectado','04 jul 2026'],['Servicio · monta natural','05 jul 2026'],['Diagnóstico · vacía','19 ago 2026']],
+   gastos:[['Veterinario','Diagnóstico de preñez','18,00']]},
+  {arete:'C-0688', nombre:'Manchada', sexo:'hembra', raza:'Brahman', nac:'2022-08-21', etapa:'vientre', grupo:'Vientres B', potrero:'Buenavista', peso:441, gdp:0.35, estado:'Preñada', pendiente:true,
+   padre:'T-0044 Trueno', madre:'C-0188 Lucera', obs:'Primer parto esperado.',
+   pesajes:[['14 mar',412],['29 abr',422],['13 jun',430],['26 jul',436],['10 sep',441]],
+   sanidad:[['Aftosa','12 may 2026','Refuerzo 12 nov 2026','ok']],
+   repro:[['Servicio · inseminación','20 dic 2025'],['Diagnóstico · preñada','03 feb 2026'],['Parto estimado','26 sep 2026']],
+   gastos:[['Medicamento','Complejo B','7,00']]},
+  {arete:'C-0925', nombre:'Lucero', sexo:'macho', raza:'Nelore', nac:'2024-03-11', etapa:'engorde', grupo:'Levante Norte', potrero:'El Palmar', peso:386, gdp:0.71, estado:'En engorde', pendiente:false,
+   padre:'T-0031 Rayo', madre:'C-0503 Perla', obs:'Salida prevista a los 460 kg.',
+   pesajes:[['16 mar',290],['01 may',318],['15 jun',342],['27 jul',366],['11 sep',386]],
+   sanidad:[['Aftosa','12 may 2026','Refuerzo 12 nov 2026','ok'],['Garrapaticida','21 ago 2026','Próximo 20 sep 2026','pronto']],
+   repro:[['Sin registros reproductivos','—']],
+   gastos:[['Alimento','Suplemento proteico','24,00']]}
+];
+
+const alertas = {
+  vencidas:[
+    {arete:'C-0503', tipo:'Baño', msg:'Garrapaticida vencido hace 32 días', fecha:'10 ago'},
+    {arete:'Lote', tipo:'Vacuna', msg:'12 refuerzos de aftosa en Levante Norte', fecha:'09 sep'}
+  ],
+  semana:[
+    {arete:'C-0412', tipo:'Parto', msg:'Parto estimado en 2 días', fecha:'13 sep'},
+    {arete:'C-0925', tipo:'Baño', msg:'Baño garrapaticida programado', fecha:'20 sep'},
+    {arete:'C-0503', tipo:'Celo', msg:'Sin celo registrado en 68 días', fecha:'11 sep'}
+  ],
+  proximas:[
+    {arete:'C-0688', tipo:'Parto', msg:'Parto estimado', fecha:'26 sep'},
+    {arete:'Lote', tipo:'Vacuna', msg:'Refuerzo de aftosa, hato completo', fecha:'12 nov'}
+  ]
+};
+
+const potreros = [
+  {nombre:'La Ceiba', ha:42, ugm:1.9, cap:1.6, dias:41, descanso:35, grupo:'Vientres A · 68 animales'},
+  {nombre:'El Palmar', ha:38, ugm:1.3, cap:1.8, dias:12, descanso:30, grupo:'Levante Norte · 94 animales'},
+  {nombre:'Buenavista', ha:35, ugm:1.1, cap:1.5, dias:6, descanso:30, grupo:'Vientres B · 51 animales'},
+  {nombre:'La Laguna', ha:33, ugm:0, cap:1.5, dias:0, descanso:30, grupo:'En descanso desde hace 22 días'}
+];
+
+const inventario = [
+  ['Vientres','142','43% del hato'],['Levante','96','29% del hato'],
+  ['Terneros y terneras','61','19% del hato'],['Descarte','23','7% del hato'],['Toros','6','2% del hato']
+];
+
+/* ============ estado ============ */
+let seleccionado = animales[0];
+let filtro = 'todos';
+let pendientes = 3;
+
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ============ navegación ============ */
+function ir(id){
+  if(id==='ficha' && window.innerWidth>=1100) id='animales';
+  $$('.pantalla').forEach(p=>p.classList.toggle('activa', p.dataset.pantalla===id));
+  $$('[data-ir]').forEach(b=>{
+    const act = b.dataset.ir===id || (id==='ficha' && b.dataset.ir==='animales');
+    if(b.closest('.tabbar')||b.closest('.rail')){ act ? b.setAttribute('aria-current','page') : b.removeAttribute('aria-current'); }
+  });
+  window.scrollTo({top:0});
+}
+document.addEventListener('click', e=>{
+  const b = e.target.closest('[data-ir]');
+  if(b){ ir(b.dataset.ir); }
+});
+
+/* ============ lista de animales ============ */
+function edad(nac){
+  const d = (new Date('2026-09-11') - new Date(nac))/86400000;
+  const a = Math.floor(d/365), m = Math.floor((d%365)/30);
+  return a>0 ? `${a} a ${m} m` : `${m} meses`;
+}
+function pintarLista(){
+  const q = ($('#buscar').value||'').toLowerCase().trim();
+  const res = animales.filter(a=>{
+    const coincide = !q || a.arete.toLowerCase().includes(q) || a.nombre.toLowerCase().includes(q);
+    const pasa = filtro==='todos' || (filtro==='sinenviar' ? a.pendiente : a.etapa===filtro);
+    return coincide && pasa;
+  });
+  const cont = $('#lista-animales');
+  if(!res.length){
+    cont.innerHTML = `<div class="vacio"><b>Ningún animal coincide</b>Revisa el arete o quita los filtros. También puedes dar de alta una ficha nueva.</div>`;
+    return;
+  }
+  cont.innerHTML = res.map(a=>`
+    <button class="fila" data-arete="${esc(a.arete)}">
+      <span class="caravana">${esc(a.arete)}</span>
+      <div class="fila-cuerpo">
+        <div class="fila-titulo">${esc(a.nombre)} ${a.pendiente?'<span class="et sinenviar">Sin enviar</span>':''}</div>
+        <div class="fila-meta">${esc(a.raza)} · ${edad(a.nac)} · ${esc(a.potrero)}</div>
+      </div>
+      <div class="fila-der"><b>${a.peso} kg</b><span>${a.gdp.toFixed(2).replace('.',',')} kg/día</span></div>
+    </button>`).join('');
+}
+$('#buscar').addEventListener('input', pintarLista);
+$$('.filtro').forEach(f=>f.addEventListener('click',()=>{
+  filtro=f.dataset.filtro;
+  $$('.filtro').forEach(x=>x.setAttribute('aria-pressed', x===f?'true':'false'));
+  pintarLista();
+}));
+document.addEventListener('click', e=>{
+  const b = e.target.closest('[data-arete]');
+  if(!b) return;
+  seleccionado = animales.find(a=>a.arete===b.dataset.arete);
+  pintarFicha();
+  if(window.innerWidth<1100) ir('ficha');
+});
+
+/* ============ ficha ============ */
+function grafico(p){
+  const vals = p.map(x=>x[1]), min = Math.min(...vals), max = Math.max(...vals);
+  const rango = (max-min)||1;
+  const pts = vals.map((v,i)=>[8 + i*(284/(vals.length-1)), 108 - ((v-min)/rango)*88]);
+  const linea = pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const area = linea + ` L${pts.at(-1)[0].toFixed(1)} 120 L8 120 Z`;
+  return `<svg viewBox="0 0 300 128" preserveAspectRatio="none" role="img" aria-label="Evolución del peso">
+    <path d="${area}" fill="rgba(28,102,71,.10)"/>
+    <path d="${linea}" fill="none" stroke="#1C6647" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+    ${pts.map((c,i)=>`<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="${i===pts.length-1?4.5:3}" fill="${i===pts.length-1?'#FFC800':'#1C6647'}" stroke="#fff" stroke-width="1.6"/>`).join('')}
+  </svg>
+  <div class="leyenda"><span>${esc(p[0][0])} · <b>${p[0][1]} kg</b></span><span style="margin-left:auto">${esc(p.at(-1)[0])} · <b>${p.at(-1)[1]} kg</b></span></div>`;
+}
+
+function fichaHTML(a){
+  const estadoClase = a.estado==='Preñada'?'ok':(a.estado==='Vacía'?'pronto':'');
+  return `
+  <div class="ficha-cabeza">
+    <span class="caravana grande">${esc(a.arete)}</span>
+    <div style="flex:1;min-width:140px">
+      <h1 style="font-size:23px">${esc(a.nombre)}</h1>
+      <p class="sub" style="margin:0">${esc(a.raza)} · ${a.sexo} · ${edad(a.nac)}</p>
+    </div>
+    <span class="et ${estadoClase}">${esc(a.estado)}</span>
+  </div>
+
+  <div class="datos">
+    <div class="dato"><span>Último peso</span><b>${a.peso} kg</b></div>
+    <div class="dato"><span>Ganancia diaria</span><b>${a.gdp.toFixed(2).replace('.',',')} kg</b></div>
+    <div class="dato"><span>Grupo</span><b>${esc(a.grupo)}</b></div>
+    <div class="dato"><span>Potrero</span><b>${esc(a.potrero)}</b></div>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+    <button class="btn amarillo" data-registrar="Pesaje">Registrar pesaje</button>
+    <button class="btn suave" data-registrar="Vacuna">Vacuna</button>
+    <button class="btn suave" data-registrar="Gasto">Gasto</button>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-panel="resumen">Resumen</button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="peso">Peso</button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="sanidad">Sanidad</button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="repro">Reproducción</button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="gastos">Gastos</button>
+  </div>
+
+  <div class="panel activo" data-panel="resumen">
+    <div class="caja" style="padding:13px 14px">${esc(a.obs)}</div>
+    <div class="genealogia">
+      <div class="pariente"><span>Padre</span><b>${esc(a.padre)}</b></div>
+      <div class="pariente"><span>Madre</span><b>${esc(a.madre)}</b></div>
+    </div>
+  </div>
+
+  <div class="panel" data-panel="peso">
+    <div class="grafico">${grafico(a.pesajes)}</div>
+    <div class="lista" style="margin-top:12px">
+      ${a.pesajes.slice().reverse().map((p,i,arr)=>{
+        const prev = arr[i+1];
+        const dif = prev ? p[1]-prev[1] : null;
+        return `<div class="fila"><div class="fila-cuerpo"><div class="fila-titulo">${p[1]} kg</div><div class="fila-meta">${esc(p[0])} de 2026</div></div>
+        <div class="fila-der">${dif!==null?`<b style="color:${dif>=0?'var(--ok)':'var(--vencido)'}">${dif>=0?'+':''}${dif} kg</b><span>desde el anterior</span>`:'<span>primer pesaje</span>'}</div></div>`;
+      }).join('')}
+    </div>
+  </div>
+
+  <div class="panel" data-panel="sanidad">
+    <div class="lista">
+      ${a.sanidad.map(s=>`<div class="fila"><i class="marca ${s[3]}"></i><div class="fila-cuerpo">
+        <div class="fila-titulo">${esc(s[0])}</div><div class="fila-meta">Aplicada el ${esc(s[1])}</div></div>
+        <div class="fila-der"><span class="et ${s[3]==='ok'?'':s[3]}">${esc(s[2])}</span></div></div>`).join('')}
+    </div>
+  </div>
+
+  <div class="panel" data-panel="repro">
+    <div class="lista">
+      ${a.repro.map(r=>`<div class="fila"><div class="fila-cuerpo"><div class="fila-titulo">${esc(r[0])}</div></div>
+      <div class="fila-der"><span>${esc(r[1])}</span></div></div>`).join('')}
+    </div>
+  </div>
+
+  <div class="panel" data-panel="gastos">
+    <div class="lista">
+      ${a.gastos.map(g=>`<div class="fila"><div class="fila-cuerpo"><div class="fila-titulo">${esc(g[1])}</div><div class="fila-meta">${esc(g[0])}</div></div>
+      <div class="fila-der"><b>$ ${esc(g[2])}</b></div></div>`).join('')}
+      <div class="fila" style="background:#FAFBF7"><div class="fila-cuerpo"><div class="fila-titulo">Costo acumulado</div><div class="fila-meta">Desde el alta de la ficha</div></div>
+      <div class="fila-der"><b>$ ${a.gastos.reduce((s,g)=>s+parseFloat(g[2].replace(',','.')),0).toFixed(2).replace('.',',')}</b></div></div>
+    </div>
+  </div>`;
+}
+function pintarFicha(){
+  const html = fichaHTML(seleccionado);
+  $('#ficha-movil').innerHTML = html;
+  $('#detalle-escritorio').innerHTML = html;
+}
+document.addEventListener('click', e=>{
+  const t = e.target.closest('.tab'); if(!t) return;
+  const raiz = t.closest('.columna-detalle, #ficha-movil, .pantalla');
+  raiz.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected', x===t?'true':'false'));
+  raiz.querySelectorAll('.panel').forEach(p=>p.classList.toggle('activo', p.dataset.panel===t.dataset.panel));
+});
+
+/* ============ alertas ============ */
+function pintarAlertas(){
+  const bloque = (arr, clase) => arr.map((al,i)=>`
+    <div class="fila" data-alerta="${clase}-${i}">
+      <i class="marca ${clase}"></i>
+      <span class="caravana chica">${esc(al.arete)}</span>
+      <div class="fila-cuerpo">
+        <div class="fila-titulo">${esc(al.msg)}</div>
+        <div class="fila-meta">${esc(al.tipo)} · ${esc(al.fecha)}</div>
+      </div>
+      <button class="btn suave chico" data-atender>Atender</button>
+    </div>`).join('');
+  $('#alertas-vencidas').innerHTML = bloque(alertas.vencidas,'vencido');
+  $('#alertas-semana').innerHTML = bloque(alertas.semana,'pronto');
+  $('#alertas-proximas').innerHTML = bloque(alertas.proximas,'ok');
+}
+document.addEventListener('click', e=>{
+  const b = e.target.closest('[data-atender]'); if(!b) return;
+  const fila = b.closest('.fila');
+  fila.querySelector('.fila-der')?.remove();
+  b.outerHTML = '<span class="et sinenviar">Atendida, sin enviar</span>';
+  sumarPendiente();
+  avisar('Alerta marcada como atendida. Se envía sola cuando haya señal.');
+});
+
+/* ============ potreros e inventario ============ */
+function pintarPotreros(){
+  $('#lista-potreros').innerHTML = potreros.map(p=>{
+    const pct = Math.min(100, (p.ugm/p.cap)*100);
+    const clase = p.ugm>p.cap ? 'excedido' : (pct>80?'alto':'');
+    const rotar = p.dias>p.descanso;
+    return `<div class="potrero">
+      <div class="potrero-cabeza"><b>${esc(p.nombre)}</b><span>${p.ha} ha</span></div>
+      <div class="fila-meta" style="margin-top:2px">${esc(p.grupo)}</div>
+      <div class="barra"><i class="${clase}" style="width:${pct.toFixed(0)}%"></i></div>
+      <div class="barra-pie">
+        <span>${p.ugm.toFixed(1).replace('.',',')} de ${p.cap.toFixed(1).replace('.',',')} UGM/ha</span>
+        <span>${p.dias?`${p.dias} días ocupado`:'En descanso'}</span>
+      </div>
+      ${rotar?`<div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span class="et pronto">Pasó los ${p.descanso} días recomendados</span>
+        <button class="btn suave chico" data-registrar="Movimiento">Mover grupo</button></div>`:''}
+    </div>`;
+  }).join('');
+}
+function pintarInventario(){
+  $('#lista-inventario').innerHTML = inventario.map(i=>`
+    <div class="fila"><div class="fila-cuerpo"><div class="fila-titulo">${esc(i[0])}</div><div class="fila-meta">${esc(i[2])}</div></div>
+    <div class="fila-der"><b>${esc(i[1])}</b></div></div>`).join('');
+}
+
+/* ============ hoja de registro ============ */
+function abrirHoja(){ $('#hoja').classList.add('abierta'); $('#fondo').classList.add('abierta'); }
+function cerrarHoja(){ $('#hoja').classList.remove('abierta'); $('#fondo').classList.remove('abierta'); }
+document.addEventListener('click', e=>{ if(e.target.closest('[data-abrir-hoja]')) abrirHoja(); });
+$('#fondo').addEventListener('click', cerrarHoja);
+$('#cerrar-hoja').addEventListener('click', cerrarHoja);
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') cerrarHoja(); });
+
+document.addEventListener('click', e=>{
+  const b = e.target.closest('[data-registrar]'); if(!b) return;
+  cerrarHoja();
+  sumarPendiente();
+  avisar(`${b.dataset.registrar} guardado en el teléfono.`);
+});
+
+/* ============ sincronización ============ */
+function textoSync(){
+  const s = $('#sync'), t = $('#sync-texto');
+  if(document.body.dataset.conexion==='off'){ s.dataset.estado='offline'; t.textContent = pendientes? `${pendientes} sin enviar` : 'Sin señal'; return; }
+  if(pendientes){ s.dataset.estado='pendiente'; t.textContent = `${pendientes} sin enviar`; }
+  else { s.dataset.estado='ok'; t.textContent = 'Al día'; }
+}
+function sumarPendiente(){ pendientes++; textoSync(); }
+$('#sync').addEventListener('click', ()=>{
+  if(document.body.dataset.conexion==='off'){ avisar('No hay señal. Los cambios salen solos al reconectar.'); return; }
+  if(!pendientes){ avisar('Todo está al día.'); return; }
+  $('#sync').dataset.estado='enviando'; $('#sync-texto').textContent='Enviando…';
+  setTimeout(()=>{ const n=pendientes; pendientes=0; textoSync(); avisar(`${n} cambios enviados al servidor.`); }, 1400);
+});
+function cambiarConexion(on){
+  document.body.dataset.conexion = on ? 'on' : 'off';
+  $('#sw-conexion').checked = !on; $('#sw-conexion2').checked = !on;
+  textoSync();
+  avisar(on ? 'Señal recuperada. Sincronizando en segundo plano.' : 'Sin señal. La app sigue funcionando igual.');
+  if(on && pendientes) setTimeout(()=>$('#sync').click(), 600);
+}
+$('#sw-conexion').addEventListener('change', e=>cambiarConexion(!e.target.checked));
+$('#sw-conexion2').addEventListener('change', e=>cambiarConexion(!e.target.checked));
+
+/* ============ avisos ============ */
+let tAviso;
+function avisar(txt){
+  $('#aviso-texto').textContent = txt;
+  $('#aviso').classList.add('visible');
+  clearTimeout(tAviso);
+  tAviso = setTimeout(()=>$('#aviso').classList.remove('visible'), 2600);
+}
+
+/* ============ arranque ============ */
+pintarLista(); pintarFicha(); pintarAlertas(); pintarPotreros(); pintarInventario(); textoSync();
+window.addEventListener('resize', ()=>{
+  if(window.innerWidth>=1100 && $('.pantalla[data-pantalla="ficha"]').classList.contains('activa')) ir('animales');
+});
+</script>
+</body>
+</html>

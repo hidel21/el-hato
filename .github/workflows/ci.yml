@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [principal]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ganaderia
+          POSTGRES_PASSWORD: ganaderia
+          POSTGRES_DB: ganaderia
+        ports: ["5433:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ganaderia"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      GAN_URL_BASE_DATOS: postgresql+psycopg://ganaderia:ganaderia@localhost:5433/ganaderia
+      GAN_URL_BASE_DATOS_PRUEBAS: postgresql+psycopg://ganaderia:ganaderia@localhost:5433/ganaderia_pruebas
+      GAN_CLAVE_SECRETA: clave-de-ci
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -e ".[dev]"
+      - name: Linter
+        run: ruff check . && ruff format --check .
+      - name: La migracion sube y baja limpia
+        run: |
+          alembic upgrade head
+          alembic downgrade base
+          alembic upgrade head
+      - name: Tests
+        run: pytest -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build

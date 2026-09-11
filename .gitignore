@@ -18,3 +18,6 @@ dist/
 # Sistema
 .DS_Store
 *.log
+
+# Alembic
+backend/alembic/versions/__pycache__/

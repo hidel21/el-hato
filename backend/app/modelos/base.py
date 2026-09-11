@@ -35,7 +35,7 @@ class ConMarcaTemporal:
         onupdate=sa.func.now(),
     )
     is_deleted: Mapped[bool] = mapped_column(
-        sa.Boolean, nullable=False, server_default=sa.text("false")
+        sa.Boolean, nullable=False, default=False, server_default=sa.text("false")
     )
     deleted_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), nullable=True)
 
@@ -48,7 +48,9 @@ class Sincronizable(ConMarcaTemporal):
     """
 
     device_id: Mapped[str | None] = mapped_column(sa.String(100), nullable=True)
-    version: Mapped[int] = mapped_column(sa.Integer, nullable=False, server_default=sa.text("1"))
+    version: Mapped[int] = mapped_column(
+        sa.Integer, nullable=False, default=1, server_default=sa.text("1")
+    )
     client_timestamp: Mapped[datetime | None] = mapped_column(
         sa.DateTime(timezone=True), nullable=True
     )

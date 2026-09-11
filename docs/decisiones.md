@@ -145,3 +145,66 @@ No edita: la edicion vive en `PUT`, y su pantalla llega con el resto.
 `conftest.py` crea `ganaderia_pruebas` si no existe, conectandose a la base
 `postgres`. Asi un compañero que ya tenia el volumen creado no necesita
 recrearlo, y el CI no necesita un script de inicializacion aparte.
+
+## 15. El indicador de sincronizacion no miente
+
+La maqueta muestra «3 sin enviar». Hoy no existe el outbox, asi que no hay nada
+pendiente que contar y un contador que siempre marca cero seria una mentira
+pequeña que se paga cara: el capataz aprende a no creerle a la barra.
+
+Hoy el indicador dice «Al dia» cuando hay conexion y «Sin señal» cuando no, que
+es informacion verdadera y util. El contador de pendientes llega junto con el
+outbox.
+
+Por lo mismo, la banda de sin señal dice «Podras seguir registrando cuando
+vuelva la conexion» y no «todo se guarda en el telefono»: eso todavia no es
+cierto.
+
+## 16. La aplicacion abre en Animales
+
+La maqueta abre en «Hoy», pero Hoy todavia no tiene modulo. La raiz redirige a
+`/animales`, que es lo unico que hoy hace algo. Cuando exista Hoy, se cambia.
+
+## 17. Node se instalo en el directorio del usuario
+
+La maquina no tenia Node y el paquete del sistema pide sudo. Node 22 quedo en
+`~/.local/lib/node-v22.14.0-linux-x64`, con enlaces en `~/.local/bin`, que ya
+esta en el PATH del usuario. Se quita con un `rm -rf` de esas rutas.
+
+Si se prefiere el paquete del sistema: `sudo apt install nodejs npm` y borrar la
+copia local.
+
+## 18. El frontend habla con la API por el proxy de Vite
+
+`vite.config.js` redirige `/api` a `localhost:8000`. Asi el navegador solo habla
+con un origen y CORS no entra en juego en desarrollo. La API igual tiene CORS
+configurado para `localhost:5173`, por si alguien prefiere apuntar directo con
+`VITE_API_URL`.
+
+## 19. React Router 7 en vez de 6
+
+La 6 arrastra dos avisos de seguridad moderados (redireccion abierta con
+contrabarra en `<Link>` y `useNavigate`, e inyeccion en la hidratacion del SSR)
+que solo estan corregidos en la 7. Ninguno es explotable aqui —no hay SSR y
+todos los destinos de navegacion son internos—, pero empezar ocho semanas sobre
+una version con avisos abiertos no compensa.
+
+El uso que hace la aplicacion (`BrowserRouter`, `Routes`, `Route`, `NavLink`,
+`Navigate`, `useNavigate`, `useParams`) es identico en las dos. La migracion no
+costo nada: `npm audit` quedo en cero y la revision en navegador pasa igual.
+
+## 20. Sin sentencias preparadas del lado del servidor
+
+psycopg 3 prepara las consultas en el servidor despues de unas cuantas
+ejecuciones. Con la API encendida, cualquier cambio de esquema —un
+`make reiniciar-base`, por ejemplo— cambia los OID de las tablas y las
+conexiones del pool se quedan con planes viejos: Postgres responde
+«cached plan must not change result type» y solo se arregla reiniciando.
+
+Aparecio en la verificacion del dia 1: `GET /animales/{id}` devolvia 500
+mientras el listado seguia respondiendo 200, porque cada consulta tiene su
+propio plan.
+
+El motor se crea con `connect_args={"prepare_threshold": None}`. A esta escala
+la diferencia de rendimiento no se nota, y ademas es lo que exige PgBouncer en
+modo transaccion, que es adonde va a ir esto en produccion.

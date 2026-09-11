@@ -17,8 +17,11 @@ La app corre en el host. Docker se usa unicamente para Postgres.
 
 ## Arranque desde cero
 
-    cp .env.ejemplo .env            # solo la primera vez
-    docker compose up -d            # Postgres, volumen ganaderia_datos_postgres
+    docker compose up -d    # Postgres, volumen ganaderia_datos_postgres
+    make preparar           # .env, venv, dependencias, migracion y semilla
+    make correr             # API y frontend juntos; Ctrl-C apaga los dos
+
+A mano, si hace falta separarlo:
 
     cd backend
     python3 -m venv .venv
@@ -27,9 +30,10 @@ La app corre en el host. Docker se usa unicamente para Postgres.
     .venv/bin/python scripts/seed.py
     .venv/bin/uvicorn app.main:app --reload
 
-    cd ../frontend
-    npm install
-    npm run dev
+    cd ../frontend && npm install && npm run dev
+
+Node vive en `~/.local/lib/node` con enlaces en `~/.local/bin`, no en el
+sistema. Si `node` no aparece, revisa que `~/.local/bin` este en el PATH.
 
 ## Credenciales de la finca demo
 
@@ -45,7 +49,7 @@ Las crea `scripts/seed.py` sobre la finca «La Guacamaya».
 
 Resetear la base sin borrar el volumen:
 
-    cd backend && .venv/bin/alembic downgrade base && .venv/bin/alembic upgrade head && .venv/bin/python scripts/seed.py
+    make reiniciar-base
 
 Borrar el volumen y empezar de cero:
 
@@ -57,12 +61,12 @@ Abrir psql:
 
 Tests (usan la base `ganaderia_pruebas`, que conftest crea sola si no existe):
 
-    cd backend && .venv/bin/pytest -q
+    make tests
 
 Linter y formato:
 
-    cd backend && .venv/bin/ruff check . && .venv/bin/ruff format --check .
-    cd frontend && npm run lint
+    make linter
+    make formato
 
 ## Diagnostico
 

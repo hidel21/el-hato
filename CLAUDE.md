@@ -15,11 +15,12 @@ Entorno  Docker Compose solo para Postgres. La app corre en el host.
 
 ## Comandos
 
-    docker compose up -d                      # Postgres en el puerto 5433 del host
-    backend/.venv/bin/alembic upgrade head    # desde backend/
-    backend/.venv/bin/python scripts/seed.py  # desde backend/
-    backend/.venv/bin/uvicorn app.main:app --reload   # desde backend/, puerto 8000
-    npm run dev                               # desde frontend/, puerto 5173
+    docker compose up -d    # Postgres en el puerto 5433 del host
+    make preparar           # entorno, dependencias, migracion y finca demo
+    make correr             # API en :8000 y frontend en :5173
+    make tests              # 19 tests
+    make linter             # ruff y eslint
+    make reiniciar-base     # baja el esquema, lo sube y vuelve a sembrar
 
 Detalle completo en la skill `entorno`.
 

@@ -41,8 +41,27 @@ conectado al mismo WiFi. Solo se expone el frontend: la API sigue escuchando en
 `localhost` y el proxy de Vite la alcanza desde el propio servidor.
 
 Ojo: por `http://` en una IP de red local el navegador **no** considera la
-pagina un contexto seguro, asi que no se puede instalar como aplicacion ni
-registrar un service worker. Para eso hace falta HTTPS o `localhost`.
+pagina un contexto seguro, asi que ahi no ofrece instalarla. Para eso hace
+falta HTTPS o `localhost`.
+
+### Instalarla como aplicacion
+
+Tiene manifest, iconos y atajos: en `http://localhost:5173` el navegador ofrece
+instalarla, y arranca en pantalla completa, sin barra de direcciones.
+
+Para instalarla en el telefono hace falta contexto seguro. Lo mas simple es por
+cable, que hace que el telefono vea la app como si fuera suya:
+
+```bash
+adb reverse tcp:5173 tcp:5173    # con depuracion USB activada
+```
+
+**No lleva service worker todavia, y es a proposito.** Hoy la interfaz lee de
+la red: cachear el shell haria que la aplicacion abra sin señal para mostrar
+una lista vacia. Sin conexion dice «Sin señal», que es la verdad. El service
+worker llega en la Fase 2 junto con Dexie y el outbox, que es cuando
+offline-first deja de ser una promesa. Ver la decision 21 en
+[docs/decisiones.md](docs/decisiones.md).
 
 > **El puerto es el 5433, no el 5432**, porque en muchas maquinas el 5432 ya lo
 > ocupa un Postgres instalado en el sistema. Se cambia con `POSTGRES_PUERTO` en

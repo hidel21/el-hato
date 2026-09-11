@@ -18,6 +18,9 @@ TanStack Query, React Hook Form + Zod. Movil primero.
   «Sin señal»; nunca «sync pendiente».
 - Toda pantalla que traiga datos resuelve los tres estados: cargando, error y
   lista vacia. Una pantalla sin los tres no esta terminada.
+- **Hay manifest pero NO hay service worker, y no se agrega hasta la Fase 2.**
+  Mientras la interfaz lea de la red, cachear el shell solo consigue que la
+  aplicacion abra sin señal para mostrar una lista vacia. Decision 21.
 
 ## Detalle de diseño
 

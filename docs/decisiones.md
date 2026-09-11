@@ -208,3 +208,28 @@ propio plan.
 El motor se crea con `connect_args={"prepare_threshold": None}`. A esta escala
 la diferencia de rendimiento no se nota, y ademas es lo que exige PgBouncer en
 modo transaccion, que es adonde va a ir esto en produccion.
+
+## 21. Manifest si, service worker no
+
+La aplicacion se puede instalar: tiene manifest, iconos, atajos y arranca en
+pantalla completa sin la barra del navegador. Chrome no pone ninguna objecion
+para instalarla (verificado con `Page.getInstallabilityErrors`: ninguna).
+
+Lo que **no** lleva es service worker, y es a proposito. Hoy la interfaz lee de
+la red. Un service worker que cachee el shell haria que la aplicacion abra sin
+señal para mostrar una lista vacia o un error: el capataz tendria el icono de
+una aplicacion que no sirve justo cuando mas la necesita, y aprenderia a no
+creerle. Es la misma razon por la que el indicador no inventa un contador de
+pendientes (decision 15).
+
+Sin conexion, la aplicacion instalada se comporta igual que en el navegador:
+dice «Sin señal». Eso es cierto.
+
+El service worker llega en la Fase 2, junto con Dexie y el outbox, que es
+cuando «offline-first» pasa a ser verdad y no una promesa.
+
+**Contexto seguro.** Instalar y registrar un service worker exige HTTPS o
+`localhost`. Por `http://` contra una IP de red local —que es lo que hace
+`make movil`— el navegador no da contexto seguro y no ofrece instalar. Para
+probar la instalacion en el telefono: `adb reverse tcp:5173 tcp:5173` por
+cable, que hace que el telefono lo vea como localhost.

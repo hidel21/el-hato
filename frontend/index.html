@@ -4,7 +4,20 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#0E3B2A" />
+    <meta name="description" content="Lleva el hato de la finca: fichas de animales, sanidad, reproducción y potreros." />
     <link rel="icon" type="image/svg+xml" href="/marca.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icono-192.png" />
+
+    <!-- Instalable en el escritorio y en el telefono. Sin service worker:
+         la aplicacion todavia no funciona sin señal y no lo va a fingir. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- iOS ignora el manifest para esto y necesita sus propias etiquetas. -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Hato" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <title>Hato</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

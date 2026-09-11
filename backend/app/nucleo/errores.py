@@ -10,6 +10,10 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as HTTPExceptionStarlette
 
+# 422. Se escribe el numero porque el nombre de la constante cambio entre
+# versiones de Starlette y no vale la pena atarse a el.
+ESTADO_DATOS_INVALIDOS = 422
+
 
 class ErrorAPI(Exception):
     """Error de dominio. Lo levantan los servicios; lo traduce el manejador."""
@@ -38,7 +42,7 @@ class NoAutenticado(ErrorAPI):
 
 class DatosInvalidos(ErrorAPI):
     def __init__(self, mensaje: str):
-        super().__init__("datos_invalidos", mensaje, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        super().__init__("datos_invalidos", mensaje, ESTADO_DATOS_INVALIDOS)
 
 
 def cuerpo_error(codigo: str, mensaje: str) -> dict[str, dict[str, str]]:
@@ -78,7 +82,7 @@ def registrar_manejadores(aplicacion: FastAPI) -> None:
             campo = ".".join(str(parte) for parte in fallo["loc"] if parte != "body")
             detalles.append(f"{campo}: {fallo['msg']}" if campo else fallo["msg"])
         return JSONResponse(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=ESTADO_DATOS_INVALIDOS,
             content=cuerpo_error("datos_invalidos", "; ".join(detalles)),
         )
 

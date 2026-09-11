@@ -10,7 +10,7 @@ aqui el borrado si es fisico.
 
 import sys
 import uuid
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 
@@ -362,6 +362,9 @@ def sembrar() -> None:
             grupos[nombre] = grupo
         sesion.flush()
 
+        # Las fichas se separan en el tiempo para que el listado por cursor
+        # muestre primero la ultima dada de alta, como en la finca real.
+        alta = datetime.now(UTC) - timedelta(hours=len(ANIMALES))
         creados: dict[str, Animal] = {}
         # Dos pasadas: primero las fichas, despues la genealogia, porque una
         # cria puede aparecer antes que su madre en la lista.
@@ -393,7 +396,10 @@ def sembrar() -> None:
                 fecha_ingreso=nacimiento,
                 origen="nacimiento",
                 observaciones=obs,
+                created_at=alta,
+                updated_at=alta,
             )
+            alta += timedelta(hours=1)
             sesion.add(animal)
             creados[arete] = animal
         sesion.flush()

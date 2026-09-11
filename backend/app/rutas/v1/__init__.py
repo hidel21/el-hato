@@ -2,7 +2,8 @@
 
 from fastapi import APIRouter
 
-from app.rutas.v1 import autenticacion
+from app.rutas.v1 import animales, autenticacion
 
 router_v1 = APIRouter(prefix="/api/v1")
 router_v1.include_router(autenticacion.router)
+router_v1.include_router(animales.router)

@@ -5,7 +5,7 @@ from datetime import date
 from decimal import Decimal
 
 import sqlalchemy as sa
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.modelos.base import ConIdentificador, DeFinca, Sincronizable
 from app.modelos.enumeraciones import EstadoAnimal, Sexo, tipo_enum
@@ -83,3 +83,13 @@ class Animal(ConIdentificador, Sincronizable, DeFinca, Base):
     foto_local_id: Mapped[str | None] = mapped_column(sa.String(100), nullable=True)
 
     observaciones: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
+
+    # Cargadas con la ficha para no disparar una consulta por fila en el listado.
+    grupo = relationship("Grupo", lazy="joined", foreign_keys=[grupo_id])
+    potrero = relationship("Potrero", lazy="joined", foreign_keys=[potrero_id])
+    madre = relationship(
+        "Animal", lazy="joined", foreign_keys=[madre_id], remote_side="Animal.id", join_depth=1
+    )
+    padre = relationship(
+        "Animal", lazy="joined", foreign_keys=[padre_id], remote_side="Animal.id", join_depth=1
+    )

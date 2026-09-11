@@ -29,6 +29,10 @@ class Configuracion(BaseSettings):
 
     origenes_permitidos: str = "http://localhost:5173"
 
+    # Decision 7: la vista materializada de inventario se refresca con debounce.
+    # En 0 el refresco queda apagado, que es lo que hacen los tests.
+    segundos_debounce_inventario: int = 30
+
     @property
     def lista_origenes(self) -> list[str]:
         return [origen.strip() for origen in self.origenes_permitidos.split(",") if origen.strip()]

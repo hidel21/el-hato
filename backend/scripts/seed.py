@@ -56,7 +56,9 @@ from app.servicios import inventario  # noqa: E402
 
 NOMBRE_FINCA = "Finca La Guacamaya"
 CLAVE_DEMO = "demo1234"
-HOY = date(2026, 9, 11)
+# La demo se siembra siempre «hoy»: las fechas relativas cuelgan de aqui. Si se
+# clava una fecha, a la semana la finca demo se ve abandonada.
+HOY = date.today()
 
 USUARIOS = [
     ("Marta Rueda", "admin@laguacamaya.com", RolUsuario.administrador, "+57 310 555 0142"),
@@ -341,6 +343,15 @@ GANANCIA_POR_ETAPA = {
 }
 
 
+def marca(fecha: date, hora: int = 8) -> datetime:
+    """Momento de captura verosimil: el hecho se anota el dia que ocurre.
+
+    Sin esto todo nace con la fecha de la siembra y la pantalla de «lo que
+    registraste hoy» muestra medio año de historia.
+    """
+    return datetime(fecha.year, fecha.month, fecha.day, hora, 30, tzinfo=UTC)
+
+
 def etapa_de(arete: str, grupo: str | None) -> str:
     if arete.startswith("T-"):
         return "toro"
@@ -359,7 +370,7 @@ def sembrar_pesajes(sesion, finca_id, animales_creados: dict, usuarios_por_rol: 
     que las cifras cuadran con lo que muestra la ficha.
     """
     capataz = usuarios_por_rol[RolUsuario.capataz]
-    fechas = [HOY - timedelta(days=dias) for dias in (182, 140, 96, 51, 3)]
+    fechas = [HOY - timedelta(days=dias) for dias in (182, 140, 96, 51, 0)]
 
     for arete, _n, _s, _r, _nac, _e, grupo, _p, peso_texto, *_resto in ANIMALES:
         animal = animales_creados[arete]
@@ -380,6 +391,8 @@ def sembrar_pesajes(sesion, finca_id, animales_creados: dict, usuarios_por_rol: 
                 peso_kg=peso,
                 metodo="bascula" if indice % 2 == 0 else "cinta",
                 responsable_id=capataz.id,
+                created_at=marca(fecha, 7 + indice),
+                updated_at=marca(fecha, 7 + indice),
             )
             if anterior is not None:
                 dias = (fecha - anterior[0]).days
@@ -473,6 +486,8 @@ def sembrar_sanidad(sesion, finca_id, grupos: dict, animales_creados: dict, usua
             cantidad_animales=len(objetivo),
             costo_total=Decimal("1.80") * len(objetivo),
             responsable_id=veterinario.id,
+            created_at=marca(fecha),
+            updated_at=marca(fecha),
         )
         sesion.add(registro)
         sesion.flush()
@@ -505,6 +520,8 @@ def sembrar_sanidad(sesion, finca_id, grupos: dict, animales_creados: dict, usua
             cantidad_animales=len(objetivo),
             costo_total=Decimal("0.90") * len(objetivo),
             responsable_id=veterinario.id,
+            created_at=marca(fecha),
+            updated_at=marca(fecha),
         )
         sesion.add(registro)
         sesion.flush()
@@ -544,6 +561,8 @@ def sembrar_reproduccion(sesion, finca_id, creados: dict, usuarios: dict) -> Non
             metodo=MetodoCelo.observacion,
             intensidad="alta",
             responsable_id=capataz.id,
+            created_at=marca(fecha_celo),
+            updated_at=marca(fecha_celo),
         )
         sesion.add(celo)
         sesion.flush()
@@ -560,6 +579,8 @@ def sembrar_reproduccion(sesion, finca_id, creados: dict, usuarios: dict) -> Non
             inseminador_id=veterinario.id,
             fecha_estimada_parto=fecha_servicio + timedelta(days=283),
             costo=Decimal("18.00") if reproductor is None else None,
+            created_at=marca(fecha_servicio),
+            updated_at=marca(fecha_servicio),
         )
         sesion.add(servicio)
         sesion.flush()
@@ -575,6 +596,8 @@ def sembrar_reproduccion(sesion, finca_id, creados: dict, usuarios: dict) -> Non
                 servicio.fecha_estimada_parto if resultado == ResultadoPrenez.prenada else None
             ),
             responsable_id=veterinario.id,
+            created_at=marca(HOY - timedelta(days=dias_dx)),
+            updated_at=marca(HOY - timedelta(days=dias_dx)),
         )
         sesion.add(diagnostico)
         sesion.flush()
@@ -594,6 +617,8 @@ def sembrar_reproduccion(sesion, finca_id, creados: dict, usuarios: dict) -> Non
                 dificultad=DificultadParto.normal,
                 peso_nacimiento_kg=Decimal("32.0"),
                 responsable_id=capataz.id,
+                created_at=marca(HOY - timedelta(days=dias_parto)),
+                updated_at=marca(HOY - timedelta(days=dias_parto)),
             )
         )
 
@@ -639,6 +664,8 @@ def sembrar_gastos(sesion, finca_id, creados: dict, grupos: dict, usuarios: dict
                 grupo_id=None if arete else grupos["Levante Norte"].id,
                 proveedor="Agroinsumos del Sinú",
                 responsable_id=administrador.id,
+                created_at=marca(HOY - timedelta(days=dias)),
+                updated_at=marca(HOY - timedelta(days=dias)),
             )
         )
 

@@ -135,6 +135,10 @@ def leer(alcance: AlcanceFinca) -> Inventario:
     No se recalcula aqui: la vista se refresca aparte, con debounce de 30
     segundos (decision 7). Por eso la respuesta dice cuando se recalculo.
     """
+    # Import local a proposito: pesajes importa este modulo para agendar el
+    # refresco de la vista, asi que arriba seria una importacion circular.
+    from app.servicios import pesajes
+
     filas = (
         alcance.sesion.execute(sa.select(VISTA).where(VISTA.c.finca_id == alcance.finca_id))
         .mappings()
@@ -187,6 +191,7 @@ def leer(alcance: AlcanceFinca) -> Inventario:
         machos=machos,
         peso_total_kg=peso_total,
         peso_promedio_kg=round(peso_total / total, 2) if total else None,
+        gdp_promedio_kg=pesajes.promedio_ganancia(alcance),
         por_etapa=_cortar(por_etapa, total),
         por_potrero=_cortar(por_potrero, total),
         por_estado=_cortar(por_estado, total),

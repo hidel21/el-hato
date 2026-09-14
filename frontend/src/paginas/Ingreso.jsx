@@ -25,13 +25,13 @@ export default function Ingreso() {
     formState: { errors, isSubmitting },
   } = useForm({ resolver: zodResolver(esquema), defaultValues: { correo: '', clave: '' } })
 
-  if (autenticado) return <Navigate to="/animales" replace />
+  if (autenticado) return <Navigate to="/hoy" replace />
 
   const enviar = async ({ correo, clave }) => {
     setErrorEntrada(null)
     try {
       await entrar(correo, clave)
-      navegar(ubicacion.state?.desde ?? '/animales', { replace: true })
+      navegar(ubicacion.state?.desde ?? '/hoy', { replace: true })
     } catch (error) {
       setErrorEntrada(error.message)
     }

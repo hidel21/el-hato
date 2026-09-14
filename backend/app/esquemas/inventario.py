@@ -39,6 +39,8 @@ class Inventario(BaseModel):
     machos: int
     peso_total_kg: Decimal
     peso_promedio_kg: Decimal | None
+    # Ganancia diaria promedio del hato en los ultimos meses.
+    gdp_promedio_kg: Decimal | None = None
 
     por_etapa: list[Corte]
     por_potrero: list[Corte]

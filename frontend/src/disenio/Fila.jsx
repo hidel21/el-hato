@@ -3,6 +3,10 @@
  * izquierda, titulo y meta en el centro, cifra a la derecha.
  *
  * Con `onClick` se vuelve un boton de 52 px de alto; sin el, un div.
+ *
+ * OJO: si la fila lleva algo interactivo dentro —un boton, un enlace— NO le
+ * pases `onClick`. Un boton dentro de otro boton es HTML invalido y el
+ * navegador se come el clic interior.
  */
 const MARCAS = {
   vencido: 'bg-vencido',

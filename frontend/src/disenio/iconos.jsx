@@ -104,3 +104,76 @@ export function IconoMovimiento(props) {
     </svg>
   )
 }
+
+export function IconoPesaje(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M4 20h16L18 7H6L4 20Z" />
+      <path d="M12 7V4" />
+      <path d="M9 12.5 12 16l4-6" />
+    </svg>
+  )
+}
+
+export function IconoVacuna(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="m15 4 5 5M17.5 6.5 9 15l-3 1 1-3 8.5-8.5" />
+      <path d="m4 20 2-2" />
+    </svg>
+  )
+}
+
+export function IconoCelo(props) {
+  return (
+    <svg {...base} {...props}>
+      <circle cx="12" cy="9" r="5" />
+      <path d="M12 14v7M9 18h6" />
+    </svg>
+  )
+}
+
+export function IconoServicio(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M8 4v6a4 4 0 0 0 8 0V4" />
+      <path d="M12 14v6M9 20h6" />
+    </svg>
+  )
+}
+
+export function IconoBano(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M12 3c3 4 5 6.2 5 9a5 5 0 0 1-10 0c0-2.8 2-5 5-9Z" />
+    </svg>
+  )
+}
+
+export function IconoGasto(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M12 4v16" />
+      <path d="M15.5 7.5H10a2.5 2.5 0 0 0 0 5h4a2.5 2.5 0 0 1 0 5H8" />
+    </svg>
+  )
+}
+
+export function IconoDiagnostico(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M6 3v6a6 6 0 0 0 12 0V3" />
+      <circle cx="12" cy="15" r="3" />
+      <path d="M12 18v3" />
+    </svg>
+  )
+}
+
+export function IconoNacimiento(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M7 18c0-3 2.2-5 5-5s5 2 5 5" />
+      <circle cx="12" cy="8" r="3" />
+    </svg>
+  )
+}

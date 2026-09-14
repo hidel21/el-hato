@@ -18,7 +18,8 @@ Entorno  Docker Compose solo para Postgres. La app corre en el host.
     docker compose up -d    # Postgres en el puerto 5433 del host
     make preparar           # entorno, dependencias, migracion y finca demo
     make correr             # API en :8000 y frontend en :5173
-    make tests              # 41 tests
+    make tests              # 88 tests de backend
+    make tests-web          # 11 tests de frontend
     make linter             # ruff y eslint
     make reiniciar-base     # baja el esquema, lo sube y vuelve a sembrar
 
@@ -39,15 +40,20 @@ Detalle completo en la skill `entorno`.
 
 ## Estado del proyecto
 
-Construido: cimientos, esquema completo (21 tablas), autenticacion JWT, RBAC,
-semilla, y de punta a punta los modulos de **Animales** y de **Potreros y
-lotes**, con sus pantallas. La aplicacion es instalable (manifest), pero sin
-service worker: decision 21.
+**Los diez modulos de dominio estan construidos de punta a punta**: animales,
+potreros y lotes, control de peso, inventario, vacunacion, baños sanitarios,
+reproduccion, gastos y alertas. Mas la pantalla del dia. 39 endpoints,
+88 tests de backend y 11 de frontend.
+
+Las alertas se **derivan en el cliente** (`frontend/src/alertas/derivar.js`,
+decision 29). El servidor solo guarda su estado. No pongas un endpoint que
+calcule vencimientos: la Fase 2 lo tiraria.
+
+La aplicacion es instalable (manifest), pero sin service worker: decision 21.
 
 NO construido todavia, y no se construye por iniciativa propia: Dexie/IndexedDB,
-service worker, motor de sincronizacion, los otros siete modulos de dominio
-(vacunacion, inventario, reproduccion, baños, alertas, gastos, control de peso),
-el job de alertas, Docker para la app, despliegue, observabilidad.
+service worker, motor de sincronizacion, el job programado de alertas, Docker
+para la app, despliegue, observabilidad.
 
 ## Donde mirar
 

@@ -9,7 +9,7 @@ PY    := $(VENV)/bin/python
 PIP   := $(VENV)/bin/pip
 ALEMBIC := cd backend && ../$(VENV)/bin/alembic
 
-.PHONY: preparar correr movil api web sembrar migrar reiniciar-base tests linter formato limpiar
+.PHONY: preparar correr movil api web sembrar migrar reiniciar-base tests tests-web linter formato limpiar
 
 IP := $(shell ip -4 -o addr show scope global 2>/dev/null | grep -v docker | grep -v br- | awk '{print $$4}' | cut -d/ -f1 | head -1)
 
@@ -69,6 +69,9 @@ reiniciar-base:
 
 tests:
 	cd backend && ../$(VENV)/bin/pytest -q
+
+tests-web:
+	cd frontend && npm test
 
 linter:
 	cd backend && ../$(VENV)/bin/ruff check . && ../$(VENV)/bin/ruff format --check .

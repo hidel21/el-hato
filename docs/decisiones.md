@@ -295,3 +295,69 @@ consulta por pagina.
 
 Los **dias de ocupacion** si los deriva el cliente desde `fecha_ultimo_ingreso`,
 como manda la decision 6. Una unidad de ganado mayor son 450 kg de peso vivo.
+
+## 28. La aplicacion abre en Hoy
+
+La decision 16 mandaba abrir en Animales porque «Hoy» todavia no existia. Ya
+existe, asi que la raiz vuelve a lo que decia la maqueta: la pantalla del dia,
+que es la que responde a la pregunta con la que el capataz saca el telefono
+—que hay que hacer— antes que a la de buscar un animal concreto.
+
+## 29. Las alertas se derivan en el cliente, de verdad
+
+La decision 6 decia que lo derivable se calcula en el cliente. Al llegar el
+modulo de alertas habia que elegir si escribirlo asi o poner un endpoint que
+devolviera los vencimientos ya masticados.
+
+Se escribio en el cliente: `frontend/src/alertas/derivar.js` es una funcion
+pura que recibe vacunaciones, baños, servicios, diagnosticos, partos y potreros
+y devuelve las alertas agrupadas por urgencia.
+
+Un endpoint habria sido mas facil hoy y basura mañana: la pantalla de alertas
+tiene que abrir sin señal, y en la Fase 2 esos mismos datos vendran de
+IndexedDB en vez de la red. La funcion no cambia; cambia de donde le llegan los
+datos. Por eso es pura y por eso tiene sus propias pruebas.
+
+Lo que si guarda el servidor es el **estado**: cuando alguien marca una alerta
+como atendida se crea una fila que apunta al registro que la origino, y el
+resto de dispositivos dejan de mostrarla.
+
+## 30. Una gestacion se cierra cuando la vaca pare
+
+Un diagnostico de preñez viejo seguia pidiendo un parto que ya habia ocurrido.
+La derivacion ahora descarta la gestacion si la misma madre tiene un parto
+posterior al diagnostico.
+
+Aparecio manejando la aplicacion: la finca demo mostraba «C-0188 debio parir
+hace 359 dias» cuando esa vaca ya habia parido. Es la alerta mas irritante que
+puede dar un sistema, porque el capataz sabe perfectamente que esa vaca ya
+pario, y una alerta que miente enseña a ignorar todas las demas.
+
+## 31. La finca demo se siembra siempre «hoy»
+
+`HOY` en la semilla era una fecha clavada, asi que a la semana la finca demo se
+veia abandonada: ningun pesaje reciente, ningun vencimiento cerca. Ahora es
+`date.today()` y todos los hechos cuelgan de ahi con desfases relativos.
+
+Ademas cada registro nace con la marca de captura del dia en que ocurrio, no
+con la de la siembra. Sin eso, la pantalla «lo que registraste hoy» mostraba
+medio año de historia de golpe.
+
+## 32. Vitest para la logica pura del frontend
+
+La derivacion de alertas es la unica logica del frontend con ramas de verdad
+—vencido contra proximo, gestacion cerrada, alertas ya atendidas— y es la que
+mas caro sale si se equivoca. Lleva sus pruebas en `*.prueba.js`, con la fecha
+fijada para que no dependan del calendario.
+
+No se prueban los componentes: para eso esta la revision en navegador, que es
+la que encuentra los fallos que importan en esta aplicacion.
+
+## 33. Un formulario declarativo para las nueve acciones de campo
+
+Pesaje, vacuna, celo, servicio, baño, gasto, diagnostico y nacimiento tienen la
+misma forma: elegir a quien, poner unos datos y guardar. Estan descritas en
+`frontend/src/registro/definiciones.js` y las dibuja un solo componente.
+
+Nueve formularios casi identicos serian nueve sitios donde arreglar el mismo
+detalle. El dia que haya que cambiar como se elige un animal, se cambia una vez.

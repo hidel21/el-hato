@@ -72,7 +72,7 @@ offline-first deja de ser una promesa. Ver la decision 21 en
 ## Comprobar que todo quedo bien
 
 ```bash
-make tests            # 19 tests
+make tests            # 41 tests
 make linter           # ruff y eslint
 make reiniciar-base   # baja el esquema, lo sube y vuelve a sembrar
 ```
@@ -123,11 +123,24 @@ en los listados desde el primer endpoint.
 | `POST` | `/animales` | los tres roles |
 | `PUT` | `/animales/{id}` | los tres roles |
 | `DELETE` | `/animales/{id}` | solo administrador |
+| `GET` `POST` | `/potreros` | los tres roles |
+| `GET` `PUT` | `/potreros/{id}` | los tres roles |
+| `DELETE` | `/potreros/{id}` | solo administrador |
+| `GET` `POST` | `/potreros/movimientos` | los tres roles |
+| `GET` `POST` | `/grupos` | los tres roles |
+| `GET` `PUT` | `/grupos/{id}` | los tres roles |
+| `DELETE` | `/grupos/{id}` | solo administrador |
 
 **Frontend.** React 18 con JavaScript, Vite, Tailwind y TanStack Query. Movil
 primero: barra inferior de cinco posiciones con boton amarillo central, rail
-lateral desde 900 px, listado y ficha en dos paneles desde 1100 px. Listado con
-busqueda y filtros, ficha con genealogia, y alta de animales contra la API real.
+lateral desde 900 px, listado y ficha en dos paneles desde 1100 px.
+
+- **Animales**: listado con busqueda y filtros, ficha con genealogia y alta con
+  lote y potrero.
+- **Potreros**: carga en UGM por hectarea, dias de ocupacion, alta y edicion.
+- **Lotes**: cuantos animales tiene cada uno, y entrada directa al listado
+  filtrado.
+- **Mover ganado**: el lote entero cambia de potrero y queda anotado.
 
 ## Que **no** hay construido, y no se construye por iniciativa propia
 
@@ -146,7 +159,7 @@ backend/          FastAPI, SQLAlchemy 2.x, Alembic
   app/servicios/  logica de dominio; los endpoints no consultan
   app/rutas/v1/   routers delgados
   scripts/seed.py finca demo
-  tests/          19 tests
+  tests/          41 tests
 frontend/         React 18 en JavaScript, Vite, Tailwind
   src/disenio/    los cinco componentes base
   src/armazon/    estructura, navegacion, hoja de registro

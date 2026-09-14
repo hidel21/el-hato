@@ -233,3 +233,65 @@ cuando «offline-first» pasa a ser verdad y no una promesa.
 `make movil`— el navegador no da contexto seguro y no ofrece instalar. Para
 probar la instalacion en el telefono: `adb reverse tcp:5173 tcp:5173` por
 cable, que hace que el telefono lo vea como localhost.
+
+## 22. Los lotes viven dentro de la pantalla de potreros
+
+La navegacion tiene cinco posiciones y ninguna es «Lotes». Antes que inventar
+una sexta, la pantalla de Potreros se divide en dos pestañas: **Potreros** y
+**Lotes**.
+
+No es un apaño: en la finca el lote y el potrero son la misma conversacion
+—«¿donde esta el levante?»— y quien entra a esa pantalla esta pensando en donde
+esta el ganado, no en que tabla lo guarda.
+
+## 23. El nombre repetido de un lote o un potrero SI se rechaza
+
+Parece contradecir la decision 1, y no. Un arete se captura a la carrera en el
+potrero, con una mano y sin señal: rechazarlo pierde trabajo. Un lote o un
+potrero los crea alguien que esta organizando el hato, mirando la pantalla, y
+que puede escribir otro nombre en dos segundos.
+
+Asi que ahi el servidor responde 409, y el mensaje devuelve el nombre **tal como
+esta guardado**, no como lo acaban de teclear: «Ya tienes un potrero llamado
+"La Ceiba"». Eso es lo que permite reconocer con cual choca.
+
+Para la Fase 2 esto es recuperable: el outbox puede reintentar con otro nombre y
+avisar. No hace falta una columna de duplicado en cada tabla.
+
+## 24. No se borra un potrero ni un lote que todavia tenga ganado
+
+Borrar un potrero con animales dentro los dejaria apuntando a tierra que ya no
+existe. El servidor responde 409 y dice cuantos son: «"La Ceiba" todavia tiene
+34 animales. Muevelos a otro potrero antes de borrarlo».
+
+Se prefirio esto a desasignarlos en silencio: un borrado no deberia cambiar
+datos que nadie pidio cambiar.
+
+## 25. Cambiar el potrero de un lote NO mueve a los animales
+
+Editar un lote cambia la etiqueta; trasladar ganado es otra cosa y tiene su
+propia operacion, `POST /potreros/movimientos`, que ademas deja historico.
+
+Si editar el lote arrastrara a los animales, el traslado mas importante de la
+finca ocurriria sin dejar rastro, y el historico de ocupacion de potreros
+—que es lo que sirve para decidir la rotacion— quedaria lleno de huecos.
+
+## 26. El movimiento congela cuantos animales se movieron
+
+`potrero_movimientos.cantidad_animales` guarda cuantos habia **ese dia**, no
+cuantos tiene el lote hoy. Es la misma razon de la decision 8: el lote cambia y
+el historico tiene que seguir siendo cierto.
+
+En la interfaz solo se mueven lotes completos. La API acepta mover un animal
+suelto, y la Fase 2 lo usara; pero en el potrero se arrea el lote entero, y una
+pantalla con menos decisiones es una pantalla que se usa con una mano.
+
+## 27. La carga del potrero la calcula el servidor
+
+Cuantos animales hay en un potrero, cuanto pesan y cual es la carga en UGM por
+hectarea son agregaciones de la finca completa: un dispositivo con datos
+parciales no puede responderlas bien. Las calcula el servidor, en una sola
+consulta por pagina.
+
+Los **dias de ocupacion** si los deriva el cliente desde `fecha_ultimo_ingreso`,
+como manda la decision 6. Una unidad de ganado mayor son 450 kg de peso vivo.

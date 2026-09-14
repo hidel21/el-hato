@@ -10,6 +10,12 @@ export function edad(fechaNacimiento, hoy = new Date()) {
   return meses > 0 ? `${meses} meses` : `${dias} días`
 }
 
+/** Cifra con coma decimal, como se escribe en Latinoamerica. */
+export function numero(valor, decimales = 1) {
+  if (valor === null || valor === undefined || valor === '') return '—'
+  return Number(valor).toFixed(decimales).replace('.', ',')
+}
+
 export function kilos(valor) {
   if (valor === null || valor === undefined) return null
   return `${Number(valor).toFixed(1).replace('.', ',')} kg`
@@ -34,3 +40,33 @@ export const ESTADOS = {
 }
 
 export const SEXOS = { hembra: 'Hembra', macho: 'Macho' }
+
+export const ETAPAS = [
+  ['ternero', 'Terneros'],
+  ['destete', 'Destete'],
+  ['levante', 'Levante'],
+  ['engorde', 'Engorde'],
+  ['vientre', 'Vientres'],
+  ['toro', 'Toros'],
+  ['descarte', 'Descarte'],
+]
+
+export const PROPOSITOS = [
+  ['cria', 'Cría'],
+  ['levante', 'Levante'],
+  ['engorde', 'Engorde'],
+  ['leche', 'Leche'],
+  ['doble_proposito', 'Doble propósito'],
+  ['manejo', 'Manejo'],
+]
+
+export const PASTOS = [
+  ['brachiaria', 'Brachiaria'],
+  ['estrella', 'Estrella'],
+  ['guinea', 'Guinea'],
+  ['kikuyo', 'Kikuyo'],
+  ['angleton', 'Angleton'],
+  ['pasto_natural', 'Pasto natural'],
+  ['mezcla', 'Mezcla'],
+  ['otro', 'Otro'],
+]

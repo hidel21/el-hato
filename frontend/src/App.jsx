@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import Estructura from './armazon/Estructura'
 import AnimalNuevo from './paginas/AnimalNuevo'
 import Animales from './paginas/Animales'
+import Potreros from './paginas/Potreros'
 import Ingreso from './paginas/Ingreso'
 import Proximamente from './paginas/Proximamente'
 import RutaProtegida from './sesion/RutaProtegida'
@@ -42,15 +43,7 @@ export default function App() {
             />
           }
         />
-        <Route
-          path="/potreros"
-          element={
-            <Proximamente
-              titulo="Potreros"
-              explicacion="La carga por hectárea y los días de ocupación llegan con el módulo de potreros."
-            />
-          }
-        />
+        <Route path="/potreros" element={<Potreros />} />
         <Route
           path="/inventario"
           element={

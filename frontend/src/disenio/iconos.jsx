@@ -96,3 +96,11 @@ export function IconoMarcaHato(props) {
     </svg>
   )
 }
+
+export function IconoMovimiento(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M4 8h13l-3-3M20 16H7l3 3" />
+    </svg>
+  )
+}

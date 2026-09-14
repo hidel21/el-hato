@@ -18,7 +18,7 @@ Entorno  Docker Compose solo para Postgres. La app corre en el host.
     docker compose up -d    # Postgres en el puerto 5433 del host
     make preparar           # entorno, dependencias, migracion y finca demo
     make correr             # API en :8000 y frontend en :5173
-    make tests              # 19 tests
+    make tests              # 41 tests
     make linter             # ruff y eslint
     make reiniciar-base     # baja el esquema, lo sube y vuelve a sembrar
 
@@ -40,11 +40,14 @@ Detalle completo en la skill `entorno`.
 ## Estado del proyecto
 
 Construido: cimientos, esquema completo (21 tablas), autenticacion JWT, RBAC,
-semilla, modulo de Animales de punta a punta, armazon del frontend.
+semilla, y de punta a punta los modulos de **Animales** y de **Potreros y
+lotes**, con sus pantallas. La aplicacion es instalable (manifest), pero sin
+service worker: decision 21.
 
 NO construido todavia, y no se construye por iniciativa propia: Dexie/IndexedDB,
-service worker, manifest PWA, motor de sincronizacion, los otros nueve modulos de
-dominio, el job de alertas, Docker para la app, despliegue, observabilidad.
+service worker, motor de sincronizacion, los otros siete modulos de dominio
+(vacunacion, inventario, reproduccion, baños, alertas, gastos, control de peso),
+el job de alertas, Docker para la app, despliegue, observabilidad.
 
 ## Donde mirar
 

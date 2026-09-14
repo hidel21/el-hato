@@ -5,9 +5,11 @@ import { useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 
 import { useCrearAnimal } from '../api/animales'
+import { useLotes, usePotreros } from '../api/territorio'
 import Boton from '../disenio/Boton'
 import Caravana from '../disenio/Caravana'
 import { IconoVolver } from '../disenio/iconos'
+import { AvisoError, CLASE_CAMPO, Campo, Desplegable } from './campos'
 
 const HOY = new Date().toISOString().slice(0, 10)
 
@@ -29,52 +31,23 @@ const esquema = z.object({
       (valor) => !valor || (Number(valor) > 0 && Number(valor) <= 2000),
       'Peso fuera de rango'
     ),
+  grupo_id: z.string().optional().or(z.literal('')),
+  potrero_id: z.string().optional().or(z.literal('')),
   observaciones: z.string().trim().max(600).optional().or(z.literal('')),
 })
-
-/**
- * Un campo con su rotulo. Con varios controles dentro (un grupo de radios) se
- * dibuja como fieldset: un <label> solo puede gobernar un control, y envolver
- * dos hace que tocar el rotulo seleccione el primero sin querer.
- */
-function Campo({ rotulo, ayuda, error, grupo = false, children }) {
-  const pie = error ? (
-    <span className="text-[13px] text-vencido">{error}</span>
-  ) : ayuda ? (
-    <span className="text-[12.5px] text-hierro">{ayuda}</span>
-  ) : null
-
-  if (grupo) {
-    return (
-      <fieldset className="flex flex-col gap-1.5 border-0 p-0">
-        <legend className="mb-1.5 p-0 text-[13px] text-hierro">{rotulo}</legend>
-        {children}
-        {pie}
-      </fieldset>
-    )
-  }
-
-  return (
-    <label className="flex flex-col gap-1.5">
-      <span className="text-[13px] text-hierro">{rotulo}</span>
-      {children}
-      {pie}
-    </label>
-  )
-}
-
-const CLASE_CAMPO =
-  'min-h-tap rounded-caja border border-borde bg-superficie px-3 text-base outline-none focus:border-pastoClaro'
 
 export default function AnimalNuevo() {
   const navegar = useNavigate()
   const crear = useCrearAnimal()
+  const lotes = useLotes()
+  const potreros = usePotreros()
   const [errorAlta, setErrorAlta] = useState(null)
 
   const {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(esquema),
@@ -85,11 +58,20 @@ export default function AnimalNuevo() {
       raza: '',
       fecha_nacimiento: '',
       peso_actual_kg: '',
+      grupo_id: '',
+      potrero_id: '',
       observaciones: '',
     },
   })
 
   const areteEscrito = watch('arete')
+
+  // Al elegir el lote se propone su potrero: un animal que entra a un lote
+  // entra al pasto donde ese lote esta. Se puede cambiar despues.
+  const alElegirLote = (evento) => {
+    const elegido = (lotes.data ?? []).find((l) => l.id === evento.target.value)
+    if (elegido?.potrero_id) setValue('potrero_id', elegido.potrero_id)
+  }
 
   const enviar = async (valores) => {
     setErrorAlta(null)
@@ -100,6 +82,8 @@ export default function AnimalNuevo() {
       raza: valores.raza || undefined,
       fecha_nacimiento: valores.fecha_nacimiento || undefined,
       peso_actual_kg: valores.peso_actual_kg || undefined,
+      grupo_id: valores.grupo_id || undefined,
+      potrero_id: valores.potrero_id || undefined,
       observaciones: valores.observaciones || undefined,
     }
     try {
@@ -186,6 +170,27 @@ export default function AnimalNuevo() {
           </Campo>
         </div>
 
+        <Campo rotulo="Lote" ayuda="El grupo con el que se maneja.">
+          <Desplegable
+            opciones={(lotes.data ?? []).map((l) => ({
+              valor: l.id,
+              texto: `${l.nombre} · ${l.cantidad_animales} animales`,
+            }))}
+            {...register('grupo_id')}
+            onChange={(evento) => {
+              register('grupo_id').onChange(evento)
+              alElegirLote(evento)
+            }}
+          />
+        </Campo>
+
+        <Campo rotulo="Potrero" ayuda="Dónde está pastando.">
+          <Desplegable
+            opciones={(potreros.data ?? []).map((p) => ({ valor: p.id, texto: p.nombre }))}
+            {...register('potrero_id')}
+          />
+        </Campo>
+
         <Campo rotulo="Notas" error={errors.observaciones?.message}>
           <textarea
             rows={3}
@@ -194,11 +199,7 @@ export default function AnimalNuevo() {
           />
         </Campo>
 
-        {errorAlta && (
-          <p className="rounded-caja border border-[#EDC7C1] bg-[#FDF3F1] px-3.5 py-2.5 text-[13.5px] text-vencido">
-            {errorAlta}
-          </p>
-        )}
+        <AvisoError mensaje={errorAlta} />
 
         <div className="mt-1 flex flex-col gap-2 rail:flex-row-reverse">
           <Boton type="submit" variante="amarillo" bloque disabled={isSubmitting}>

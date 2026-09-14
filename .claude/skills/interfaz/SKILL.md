@@ -118,3 +118,8 @@ animales, no entidades.
   el primero sin querer. Usa `fieldset` + `legend` (ver `Campo` en
   `AnimalNuevo.jsx`).
 - El campo de busqueda va con fuente de 16 px o iOS hace zoom al enfocar.
+- **Todo componente de formulario propio necesita `forwardRef`.** React Hook
+  Form registra el campo pasando una ref al elemento del DOM; si el componente
+  no la reenvia, el valor elegido nunca sale en el envio y **no hay ningun
+  error**: el formulario guarda vacio. Le paso a `Desplegable` y solo se vio
+  manejandolo en el navegador.

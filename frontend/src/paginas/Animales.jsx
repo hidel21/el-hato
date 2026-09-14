@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
 import { useAnimales } from '../api/animales'
+import { useLotes } from '../api/territorio'
 import { useMedia } from '../armazon/useMedia'
 import Boton from '../disenio/Boton'
 import Buscador from '../disenio/Buscador'
@@ -33,12 +34,23 @@ export default function Animales() {
   const navegar = useNavigate()
   const dosPaneles = useMedia('(min-width: 1100px)')
 
+  const [parametros, setParametros] = useSearchParams()
   const [texto, setTexto] = useState('')
   const [filtro, setFiltro] = useState('todos')
   const buscar = useRetraso(texto)
 
+  // El lote llega por la URL: desde la pantalla de potreros se entra ya filtrado.
+  const loteId = parametros.get('lote')
+  const lotes = useLotes()
+  const lote = (lotes.data ?? []).find((l) => l.id === loteId)
+
+  const quitarLote = () => {
+    parametros.delete('lote')
+    setParametros(parametros, { replace: true })
+  }
+
   const estado = FILTROS.find((f) => f.clave === filtro)?.estado
-  const listado = useAnimales({ buscar, estado })
+  const listado = useAnimales({ buscar, estado, grupo_id: loteId ?? undefined })
 
   const animales = listado.data?.pages.flatMap((pagina) => pagina.datos) ?? []
 
@@ -57,6 +69,17 @@ export default function Animales() {
       </p>
 
       <Buscador valor={texto} alCambiar={setTexto} marcador="Buscar por arete o nombre" />
+
+      {loteId && (
+        <button
+          type="button"
+          onClick={quitarLote}
+          className="mt-3 flex min-h-[40px] w-full items-center justify-between gap-2 rounded-caja border border-pasto bg-[#F2F6F0] px-3.5 text-left text-[13.5px] peso-medio"
+        >
+          <span>Solo el lote {lote?.nombre ?? 'elegido'}</span>
+          <span className="text-hierro">Ver todos ✕</span>
+        </button>
+      )}
 
       <div className="-mx-3.5 flex gap-[7px] overflow-x-auto px-3.5 py-3 [scrollbar-width:none] rail:mx-0 rail:px-0">
         {FILTROS.map((opcion) => (
@@ -94,10 +117,10 @@ export default function Animales() {
         {listado.isSuccess && animales.length === 0 && (
           <div className="px-4 py-9 text-center">
             <b className="mb-1 block text-[15.5px] peso-medio">
-              {buscar ? 'Ningún animal coincide' : 'Todavía no hay animales'}
+              {buscar || loteId ? 'Ningún animal coincide' : 'Todavía no hay animales'}
             </b>
             <p className="mb-4 text-[13.5px] text-hierro">
-              {buscar
+              {buscar || loteId
                 ? 'Revisa el arete o quita los filtros.'
                 : 'Da de alta la primera ficha y empieza a llevar el hato.'}
             </p>

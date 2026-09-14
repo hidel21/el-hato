@@ -27,7 +27,7 @@ from app.modelos.enumeraciones import (  # noqa: E402
     Sexo,
     TipoPasto,
 )
-from app.nucleo.base_datos import FabricaSesion  # noqa: E402
+from app.nucleo.base_datos import Base, FabricaSesion  # noqa: E402
 from app.nucleo.seguridad import hashear_clave  # noqa: E402
 
 NOMBRE_FINCA = "Finca La Guacamaya"
@@ -287,12 +287,22 @@ ANIMALES = [
 
 
 def limpiar_finca(sesion, finca_id: uuid.UUID) -> None:
-    """Borra en orden inverso a las dependencias."""
+    """Borra todo lo de una finca, en orden seguro.
+
+    No enumera las tablas a mano: recorre las que llevan finca_id en el orden
+    inverso al de dependencias. Asi cada modulo nuevo queda cubierto sin volver
+    a tocar este script, que es justo lo que fallo cuando aparecieron los
+    movimientos entre potreros.
+    """
+    # Las autorreferencias van primero: un animal apunta a su madre y su padre.
     sesion.execute(
         sa.update(Animal).where(Animal.finca_id == finca_id).values(madre_id=None, padre_id=None)
     )
-    for modelo in (Animal, Grupo, Potrero, Usuario):
-        sesion.execute(sa.delete(modelo).where(modelo.finca_id == finca_id))
+
+    for tabla in reversed(Base.metadata.sorted_tables):
+        if tabla.name != "fincas" and "finca_id" in tabla.c:
+            sesion.execute(sa.delete(tabla).where(tabla.c.finca_id == finca_id))
+
     sesion.execute(sa.delete(Finca).where(Finca.id == finca_id))
     sesion.flush()
 

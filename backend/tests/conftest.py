@@ -162,6 +162,33 @@ def crear_animal(sesion: Session, finca_id: uuid.UUID, arete: str, **extra) -> A
     return animal
 
 
+def crear_potrero(sesion: Session, finca_id: uuid.UUID, nombre: str, **extra) -> Potrero:
+    potrero = Potrero(
+        finca_id=finca_id,
+        nombre=nombre,
+        hectareas=extra.pop("hectareas", 10),
+        **extra,
+    )
+    sesion.add(potrero)
+    sesion.commit()
+    sesion.refresh(potrero)
+    return potrero
+
+
+def crear_grupo(sesion: Session, finca_id: uuid.UUID, nombre: str, **extra) -> Grupo:
+    grupo = Grupo(
+        finca_id=finca_id,
+        nombre=nombre,
+        etapa=extra.pop("etapa", EtapaGrupo.levante),
+        proposito=extra.pop("proposito", PropositoGrupo.engorde),
+        **extra,
+    )
+    sesion.add(grupo)
+    sesion.commit()
+    sesion.refresh(grupo)
+    return grupo
+
+
 def cabeceras(cliente: TestClient, correo: str) -> dict[str, str]:
     respuesta = cliente.post("/api/v1/auth/login", json={"correo": correo, "clave": CLAVE})
     assert respuesta.status_code == 200, respuesta.text

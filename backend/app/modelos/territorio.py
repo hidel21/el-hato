@@ -5,7 +5,7 @@ from datetime import date
 from decimal import Decimal
 
 import sqlalchemy as sa
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.modelos.base import ConIdentificador, DeFinca, Sincronizable
 from app.modelos.enumeraciones import EtapaGrupo, PropositoGrupo, TipoPasto, tipo_enum
@@ -53,6 +53,9 @@ class Grupo(ConIdentificador, Sincronizable, DeFinca, Base):
     )
     descripcion: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
 
+    potrero = relationship("Potrero", lazy="joined", foreign_keys=[potrero_id])
+    responsable = relationship("Usuario", lazy="joined", foreign_keys=[responsable_id])
+
 
 class PotreroMovimiento(ConIdentificador, Sincronizable, DeFinca, Base):
     """Un traslado de un grupo o de un animal suelto entre potreros."""
@@ -80,3 +83,10 @@ class PotreroMovimiento(ConIdentificador, Sincronizable, DeFinca, Base):
     )
     motivo: Mapped[str | None] = mapped_column(sa.String(160), nullable=True)
     observaciones: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
+
+    # Cargados con la fila: el historial de movimientos siempre se lee con los
+    # nombres, y sin esto seria una consulta por renglon.
+    potrero_origen = relationship("Potrero", lazy="joined", foreign_keys=[potrero_origen_id])
+    potrero_destino = relationship("Potrero", lazy="joined", foreign_keys=[potrero_destino_id])
+    grupo = relationship("Grupo", lazy="joined", foreign_keys=[grupo_id])
+    animal = relationship("Animal", lazy="joined", foreign_keys=[animal_id])

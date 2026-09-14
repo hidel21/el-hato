@@ -24,18 +24,28 @@ from app.modelos import (  # noqa: E402
     BanoAnimal,
     CatalogoProductoBano,
     CatalogoVacuna,
+    Celo,
+    DiagnosticoPrenez,
     Finca,
+    Gasto,
     Grupo,
+    Parto,
     Pesaje,
     Potrero,
+    ServicioReproductivo,
     Usuario,
     Vacunacion,
     VacunacionAnimal,
 )
 from app.modelos.enumeraciones import (  # noqa: E402
+    CategoriaGasto,
+    DificultadParto,
     EstadoAnimal,
     EtapaGrupo,
+    MetodoCelo,
     PropositoGrupo,
+    ResultadoParto,
+    ResultadoPrenez,
     RolUsuario,
     Sexo,
     TipoPasto,
@@ -503,6 +513,136 @@ def sembrar_sanidad(sesion, finca_id, grupos: dict, animales_creados: dict, usua
         )
 
 
+def sembrar_reproduccion(sesion, finca_id, creados: dict, usuarios: dict) -> None:
+    """Un ciclo completo por vientre, en distintos puntos del calendario.
+
+    Una hembra preñada con parto encima, una vacia que hay que revisar y una
+    que ya pario: son los tres casos que se ven a diario en una finca de cria.
+    """
+    capataz = usuarios[RolUsuario.capataz]
+    veterinario = usuarios[RolUsuario.veterinario]
+    toro = creados["T-0031"]
+    otro_toro = creados["T-0044"]
+
+    # arete, dias del celo, tipo, toro, dias del diagnostico, resultado, dias del parto
+    CICLOS = [
+        ("C-0412", 300, "inseminacion", None, 240, ResultadoPrenez.prenada, None),
+        ("C-0503", 70, "monta_natural", toro, 26, ResultadoPrenez.vacia, None),
+        ("C-0688", 268, "inseminacion", None, 205, ResultadoPrenez.prenada, None),
+        ("C-0188", 640, "monta_natural", otro_toro, 580, ResultadoPrenez.prenada, 357),
+        ("C-0729", 420, "monta_natural", toro, 360, ResultadoPrenez.prenada, 137),
+    ]
+
+    for arete, dias_celo, tipo, reproductor, dias_dx, resultado, dias_parto in CICLOS:
+        madre = creados[arete]
+        fecha_celo = HOY - timedelta(days=dias_celo)
+
+        celo = Celo(
+            finca_id=finca_id,
+            animal_id=madre.id,
+            fecha_celo=fecha_celo,
+            metodo=MetodoCelo.observacion,
+            intensidad="alta",
+            responsable_id=capataz.id,
+        )
+        sesion.add(celo)
+        sesion.flush()
+
+        fecha_servicio = fecha_celo + timedelta(days=1)
+        servicio = ServicioReproductivo(
+            finca_id=finca_id,
+            animal_id=madre.id,
+            celo_id=celo.id,
+            tipo=tipo,
+            fecha_servicio=fecha_servicio,
+            toro_id=reproductor.id if reproductor else None,
+            pajilla_codigo=None if reproductor else "PAJ-2026-114",
+            inseminador_id=veterinario.id,
+            fecha_estimada_parto=fecha_servicio + timedelta(days=283),
+            costo=Decimal("18.00") if reproductor is None else None,
+        )
+        sesion.add(servicio)
+        sesion.flush()
+
+        diagnostico = DiagnosticoPrenez(
+            finca_id=finca_id,
+            animal_id=madre.id,
+            servicio_id=servicio.id,
+            fecha_diagnostico=HOY - timedelta(days=dias_dx),
+            resultado=resultado,
+            metodo="palpación",
+            fecha_estimada_parto=(
+                servicio.fecha_estimada_parto if resultado == ResultadoPrenez.prenada else None
+            ),
+            responsable_id=veterinario.id,
+        )
+        sesion.add(diagnostico)
+        sesion.flush()
+
+        if dias_parto is None:
+            continue
+
+        cria = creados.get("C-1033") if arete == "C-0188" else None
+        sesion.add(
+            Parto(
+                finca_id=finca_id,
+                madre_id=madre.id,
+                diagnostico_id=diagnostico.id,
+                cria_id=cria.id if cria else None,
+                fecha_parto=HOY - timedelta(days=dias_parto),
+                resultado=ResultadoParto.vivo,
+                dificultad=DificultadParto.normal,
+                peso_nacimiento_kg=Decimal("32.0"),
+                responsable_id=capataz.id,
+            )
+        )
+
+    # Un parto mas viejo de la misma madre, para que haya intervalo que medir.
+    sesion.add(
+        Parto(
+            finca_id=finca_id,
+            madre_id=creados["C-0188"].id,
+            fecha_parto=HOY - timedelta(days=357 + 372),
+            resultado=ResultadoParto.vivo,
+            dificultad=DificultadParto.asistido,
+            peso_nacimiento_kg=Decimal("29.5"),
+            responsable_id=capataz.id,
+        )
+    )
+
+
+GASTOS_DEMO = [
+    (CategoriaGasto.veterinario, "Revisión de preñez", "18.00", 26, "C-0503"),
+    (CategoriaGasto.medicamento, "Vitamina AD3E", "6.50", 40, "C-0412"),
+    (CategoriaGasto.veterinario, "Evaluación andrológica", "75.00", 95, "T-0031"),
+    (CategoriaGasto.medicamento, "Desparasitante", "5.00", 61, "C-1033"),
+    (CategoriaGasto.alimento, "Sal mineralizada, 6 bultos", "186.00", 12, None),
+    (CategoriaGasto.alimento, "Suplemento proteico", "240.00", 33, None),
+    (CategoriaGasto.mano_obra, "Jornales de cerca", "320.00", 21, None),
+    (CategoriaGasto.transporte, "Flete a subasta", "150.00", 8, None),
+    (CategoriaGasto.insumo, "Cuerda y grapas", "48.00", 54, None),
+    (CategoriaGasto.mantenimiento, "Arreglo del bebedero", "95.00", 70, None),
+]
+
+
+def sembrar_gastos(sesion, finca_id, creados: dict, grupos: dict, usuarios: dict) -> None:
+    administrador = usuarios[RolUsuario.administrador]
+    for categoria, concepto, monto, dias, arete in GASTOS_DEMO:
+        sesion.add(
+            Gasto(
+                finca_id=finca_id,
+                categoria=categoria,
+                concepto=concepto,
+                monto=Decimal(monto),
+                fecha_gasto=HOY - timedelta(days=dias),
+                animal_id=creados[arete].id if arete else None,
+                grupo_id=None if arete else grupos["Levante Norte"].id,
+                proveedor="Agroinsumos del Sinú",
+                responsable_id=administrador.id,
+            )
+        )
+
+
 def sembrar() -> None:
     sesion = FabricaSesion()
     try:
@@ -620,6 +760,8 @@ def sembrar() -> None:
 
         sembrar_pesajes(sesion, finca.id, creados, usuarios_por_rol)
         sembrar_sanidad(sesion, finca.id, grupos, creados, usuarios_por_rol)
+        sembrar_reproduccion(sesion, finca.id, creados, usuarios_por_rol)
+        sembrar_gastos(sesion, finca.id, creados, grupos, usuarios_por_rol)
         sesion.commit()
 
         # La vista de inventario se refresca con debounce y nadie va a escribir
@@ -633,6 +775,7 @@ def sembrar() -> None:
             print(f"    {correo:32} {rol.value}")
         print(f"  {len(POTREROS)} potreros, {len(GRUPOS)} grupos, {len(ANIMALES)} animales.")
         print(f"  {len(VACUNAS)} vacunas y {len(PRODUCTOS_BANO)} productos en catalogo.")
+        print(f"  5 ciclos reproductivos y {len(GASTOS_DEMO)} gastos.")
     except Exception:
         sesion.rollback()
         raise

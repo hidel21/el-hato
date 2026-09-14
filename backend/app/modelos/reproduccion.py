@@ -9,7 +9,7 @@ from datetime import date
 from decimal import Decimal
 
 import sqlalchemy as sa
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.modelos.base import ConIdentificador, DeFinca, Sincronizable
 from app.modelos.enumeraciones import (
@@ -35,6 +35,8 @@ class Celo(ConIdentificador, Sincronizable, DeFinca, Base):
         sa.Uuid, sa.ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True
     )
     observaciones: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
+
+    animal = relationship("Animal", lazy="joined", foreign_keys=[animal_id])
 
 
 class ServicioReproductivo(ConIdentificador, Sincronizable, DeFinca, Base):
@@ -68,6 +70,9 @@ class ServicioReproductivo(ConIdentificador, Sincronizable, DeFinca, Base):
     costo: Mapped[Decimal | None] = mapped_column(sa.Numeric(12, 2), nullable=True)
     observaciones: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
 
+    animal = relationship("Animal", lazy="joined", foreign_keys=[animal_id])
+    toro = relationship("Animal", lazy="joined", foreign_keys=[toro_id])
+
 
 class DiagnosticoPrenez(ConIdentificador, Sincronizable, DeFinca, Base):
     __tablename__ = "diagnosticos_prenez"
@@ -97,6 +102,8 @@ class DiagnosticoPrenez(ConIdentificador, Sincronizable, DeFinca, Base):
     )
     observaciones: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
 
+    animal = relationship("Animal", lazy="joined", foreign_keys=[animal_id])
+
 
 class Parto(ConIdentificador, Sincronizable, DeFinca, Base):
     __tablename__ = "partos"
@@ -120,3 +127,6 @@ class Parto(ConIdentificador, Sincronizable, DeFinca, Base):
         sa.Uuid, sa.ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True
     )
     observaciones: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
+
+    madre = relationship("Animal", lazy="joined", foreign_keys=[madre_id])
+    cria = relationship("Animal", lazy="joined", foreign_keys=[cria_id])

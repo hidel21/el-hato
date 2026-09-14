@@ -3,12 +3,15 @@
 from fastapi import APIRouter
 
 from app.rutas.v1 import (
+    alertas,
     animales,
     autenticacion,
+    gastos,
     grupos,
     inventario,
     pesajes,
     potreros,
+    reproduccion,
     sanidad,
 )
 
@@ -23,3 +26,6 @@ router_v1.include_router(sanidad.router_vacunas)
 router_v1.include_router(sanidad.router_vacunaciones)
 router_v1.include_router(sanidad.router_productos)
 router_v1.include_router(sanidad.router_banos)
+router_v1.include_router(reproduccion.router)
+router_v1.include_router(gastos.router)
+router_v1.include_router(alertas.router)

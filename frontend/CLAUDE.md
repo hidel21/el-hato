@@ -22,6 +22,14 @@ TanStack Query, React Hook Form + Zod. Movil primero.
   Mientras la interfaz lea de la red, cachear el shell solo consigue que la
   aplicacion abra sin señal para mostrar una lista vacia. Decision 21.
 
+- **Las alertas se derivan aqui, no en el servidor** (`src/alertas/derivar.js`,
+  decision 29). Es una funcion pura con pruebas en `*.prueba.js`. Si un modulo
+  nuevo genera vencimientos, va ahi.
+- **Las acciones de registro se declaran**, no se escriben una por una:
+  `src/registro/definiciones.js`.
+- Una fila con algo interactivo dentro NO lleva `onClick`: boton dentro de
+  boton es HTML invalido y el navegador se come el clic interior.
+
 ## Detalle de diseño
 
 En la skill `interfaz` y en `docs/sistema-diseno.md`. No abras

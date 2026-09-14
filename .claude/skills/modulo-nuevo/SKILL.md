@@ -8,9 +8,13 @@ description: Receta de punta a punta para agregar un modulo de dominio a Hato �
 El modulo de **Animales** es la referencia viva. Cuando dudes, abre el archivo
 equivalente ahi y copia la forma, no la inventes.
 
-Faltan nueve: grupos, vacunacion, inventario, reproduccion, potreros, baños
-sanitarios, alertas, gastos y control de peso. Los modelos y las tablas **ya
-existen**: la migracion inicial trae las 21. Lo que falta es la capa de arriba.
+**Los diez modulos ya estan construidos.** Esta receta queda para lo que venga
+despues —sanidad preventiva, ventas, lecheria, lo que sea—, y para entender por
+que los que hay estan escritos como estan.
+
+Antes de empezar uno nuevo, mira el que mas se le parezca: `pesajes` si es un
+registro simple por animal, `sanidad` si aplica a lotes, `reproduccion` si es
+una cadena de eventos encadenados.
 
 ## Orden de trabajo
 
@@ -143,7 +147,22 @@ Carga la skill `interfaz` antes de escribir JSX.
 - Reemplaza la pantalla `Proximamente` correspondiente en `App.jsx`, y agrega
   la opcion real a `HojaRegistro.jsx`.
 
+### Si el modulo genera vencimientos
+
+**No los calcules en el servidor.** La derivacion vive en
+`frontend/src/alertas/derivar.js` (decision 29): agrega ahi una funcion
+`porLoQueSea(...)`, devuelve alertas con `referencia_tabla` y `referencia_id`, y
+escribe su prueba en `derivar.prueba.js` con la fecha fijada.
+
+El servidor solo guarda el estado de la alerta. Un endpoint de vencimientos es
+trabajo que la Fase 2 tira, porque esa pantalla tiene que abrir sin señal.
+
+### Si el modulo se registra en campo
+
+Agregalo a `frontend/src/registro/definiciones.js` y aparece solo en la hoja del
+boton amarillo. No escribas otro formulario.
+
 ## Lo que sigue sin construirse
 
-Dexie, IndexedDB, service worker, manifest, motor de sincronizacion y el job
-programado de alertas. No los metas de contrabando dentro de un modulo.
+Dexie, IndexedDB, service worker, motor de sincronizacion y el job programado de
+alertas. No los metas de contrabando dentro de un modulo.

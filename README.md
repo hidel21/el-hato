@@ -72,7 +72,8 @@ offline-first deja de ser una promesa. Ver la decision 21 en
 ## Comprobar que todo quedo bien
 
 ```bash
-make tests            # 41 tests
+make tests            # 88 tests de backend
+make tests-web        # 11 tests de frontend
 make linter           # ruff y eslint
 make reiniciar-base   # baja el esquema, lo sube y vuelve a sembrar
 ```
@@ -105,7 +106,7 @@ curl -s -o /dev/null -w '%{http_code}\n' -X DELETE \
 ## Que hay construido
 
 **Base de datos.** 21 tablas, 15 enums nativos y la vista materializada
-`inventario_hato`, en una sola migracion inicial. PK UUID en todas, borrado
+`inventario_hato`. PK UUID en todas, borrado
 logico en todas, `finca_id` en toda tabla raiz.
 
 **API.** FastAPI bajo `/api/v1`. Autenticacion JWT con Argon2 (acceso de 30
@@ -130,23 +131,51 @@ en los listados desde el primer endpoint.
 | `GET` `POST` | `/grupos` | los tres roles |
 | `GET` `PUT` | `/grupos/{id}` | los tres roles |
 | `DELETE` | `/grupos/{id}` | solo administrador |
+| `GET` `POST` | `/pesajes` | los tres roles |
+| `GET` | `/pesajes/de-animal/{id}` | los tres roles |
+| `GET` | `/inventario` | los tres roles |
+| `GET` `POST` | `/catalogo-vacunas` | ver todos, crear veterinario |
+| `GET` `POST` | `/vacunaciones` | los tres roles |
+| `GET` | `/vacunaciones/{id}/animales` | los tres roles |
+| `GET` `POST` | `/catalogo-productos-bano` | ver todos, crear veterinario |
+| `GET` `POST` | `/banos` | los tres roles |
+| `GET` | `/reproduccion/de-animal/{id}` | los tres roles |
+| `GET` `POST` | `/reproduccion/celos` | los tres roles |
+| `GET` `POST` | `/reproduccion/servicios` | los tres roles |
+| `GET` `POST` | `/reproduccion/diagnosticos` | solo veterinario |
+| `GET` `POST` | `/reproduccion/partos` | los tres roles |
+| `GET` `POST` | `/gastos` | los tres roles |
+| `GET` | `/gastos/resumen` | los tres roles |
+| `GET` `POST` `PUT` | `/alertas` | los tres roles |
+
+La lista completa, con filtros y ejemplos, está en `/docs`.
 
 **Frontend.** React 18 con JavaScript, Vite, Tailwind y TanStack Query. Movil
 primero: barra inferior de cinco posiciones con boton amarillo central, rail
 lateral desde 900 px, listado y ficha en dos paneles desde 1100 px.
 
-- **Animales**: listado con busqueda y filtros, ficha con genealogia y alta con
-  lote y potrero.
-- **Potreros**: carga en UGM por hectarea, dias de ocupacion, alta y edicion.
-- **Lotes**: cuantos animales tiene cada uno, y entrada directa al listado
-  filtrado.
-- **Mover ganado**: el lote entero cambia de potrero y queda anotado.
+- **Hoy**: la pantalla de entrada. Cifras del hato, cuatro atajos de registro,
+  lo que urge y lo que se registró hoy.
+- **Animales**: listado con búsqueda y filtros. La ficha trae pestañas de peso
+  con gráfica, sanidad, reproducción y gastos con costo acumulado.
+- **Potreros y lotes**: carga en UGM por hectárea, días de ocupación, y el
+  traslado de ganado que deja histórico.
+- **Alertas**: vencidas, de esta semana y próximas, con botón de atender.
+- **Inventario**: conteo por etapa, potrero y estado.
+- **Registrar en campo**: el botón amarillo abre nueve acciones — pesaje,
+  vacuna, celo, servicio, baño, gasto, diagnóstico, nacimiento y movimiento.
+
+**Las alertas se calculan en el teléfono**, no en el servidor
+(`src/alertas/derivar.js`). Es una función pura con sus propias pruebas: en la
+Fase 2 leerá de IndexedDB en vez de la red y no habrá que tocarla.
 
 ## Que **no** hay construido, y no se construye por iniciativa propia
 
-Dexie.js, IndexedDB, service worker, manifest de PWA, motor de sincronizacion,
-los otros nueve modulos de dominio, el job programado de alertas, Docker para la
-aplicacion, despliegue y observabilidad.
+Dexie.js, IndexedDB, service worker, motor de sincronización, el job programado
+de alertas, Docker para la aplicación, despliegue y observabilidad.
+
+Los diez módulos de dominio sí están: animales, potreros, lotes, control de
+peso, inventario, vacunación, baños sanitarios, reproducción, gastos y alertas.
 
 ---
 
@@ -159,10 +188,12 @@ backend/          FastAPI, SQLAlchemy 2.x, Alembic
   app/servicios/  logica de dominio; los endpoints no consultan
   app/rutas/v1/   routers delgados
   scripts/seed.py finca demo
-  tests/          41 tests
+  tests/          88 tests
 frontend/         React 18 en JavaScript, Vite, Tailwind
   src/disenio/    los cinco componentes base
-  src/armazon/    estructura, navegacion, hoja de registro
+  src/armazon/    estructura, navegacion, hojas
+  src/alertas/    derivacion de alertas en el dispositivo, con sus pruebas
+  src/registro/   las nueve acciones de campo, declaradas y dibujadas
   src/paginas/    pantallas
 docs/             decisiones, esquema, diseño, contrato de sincronizacion
 .claude/skills/   recetas para seguir construyendo

@@ -1,6 +1,6 @@
 ---
 name: modulo-nuevo
-description: Receta de punta a punta para agregar un modulo de dominio a Hato — pesajes, vacunacion, reproduccion, potreros, baños, gastos, alertas, grupos o inventario. Va del modelo a la pantalla siguiendo el patron ya probado en Animales. Usala al empezar cualquiera de los nueve modulos que faltan.
+description: Receta de punta a punta para agregar un modulo de dominio a Hato — del modelo SQLAlchemy a la pantalla, siguiendo el patron ya probado en los diez modulos existentes. Incluye las dos reglas que mas se olvidan: los vencimientos se derivan en el cliente y las acciones de campo se declaran. Usala al empezar cualquier modulo nuevo.
 ---
 
 # Modulo nuevo, de punta a punta

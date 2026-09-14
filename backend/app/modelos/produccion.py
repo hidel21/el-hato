@@ -5,7 +5,7 @@ from datetime import date
 from decimal import Decimal
 
 import sqlalchemy as sa
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.modelos.base import ConIdentificador, DeFinca, Sincronizable
 from app.modelos.enumeraciones import CategoriaGasto, tipo_enum
@@ -37,6 +37,8 @@ class Pesaje(ConIdentificador, Sincronizable, DeFinca, Base):
     )
     observaciones: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
 
+    animal = relationship("Animal", lazy="joined", foreign_keys=[animal_id])
+
 
 class Gasto(ConIdentificador, Sincronizable, DeFinca, Base):
     __tablename__ = "gastos"
@@ -60,3 +62,6 @@ class Gasto(ConIdentificador, Sincronizable, DeFinca, Base):
         sa.Uuid, sa.ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True
     )
     observaciones: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
+
+    animal = relationship("Animal", lazy="joined", foreign_keys=[animal_id])
+    grupo = relationship("Grupo", lazy="joined", foreign_keys=[grupo_id])

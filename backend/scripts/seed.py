@@ -18,7 +18,7 @@ import sqlalchemy as sa
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.modelos import Animal, Finca, Grupo, Potrero, Usuario  # noqa: E402
+from app.modelos import Animal, Finca, Grupo, Pesaje, Potrero, Usuario  # noqa: E402
 from app.modelos.enumeraciones import (  # noqa: E402
     EstadoAnimal,
     EtapaGrupo,
@@ -29,6 +29,7 @@ from app.modelos.enumeraciones import (  # noqa: E402
 )
 from app.nucleo.base_datos import Base, FabricaSesion  # noqa: E402
 from app.nucleo.seguridad import hashear_clave  # noqa: E402
+from app.servicios import inventario  # noqa: E402
 
 NOMBRE_FINCA = "Finca La Guacamaya"
 CLAVE_DEMO = "demo1234"
@@ -307,6 +308,67 @@ def limpiar_finca(sesion, finca_id: uuid.UUID) -> None:
     sesion.flush()
 
 
+# Cuanto gana al dia cada etapa, mas o menos. Un ternero gana rapido, un toro
+# adulto ya casi no se mueve de peso.
+GANANCIA_POR_ETAPA = {
+    "ternero": Decimal("0.62"),
+    "levante": Decimal("0.74"),
+    "vientre": Decimal("0.22"),
+    "toro": Decimal("0.06"),
+}
+
+
+def etapa_de(arete: str, grupo: str | None) -> str:
+    if arete.startswith("T-"):
+        return "toro"
+    if grupo == "Terneras 26":
+        return "ternero"
+    if grupo == "Levante Norte":
+        return "levante"
+    return "vientre"
+
+
+def sembrar_pesajes(sesion, finca_id, animales_creados: dict, usuarios_por_rol: dict) -> None:
+    """Cinco pesajes por animal, hacia atras desde su peso actual.
+
+    Sin historico no hay grafica ni ganancia diaria, y la ficha de un animal se
+    ve muerta. Los pesos se reconstruyen restando la ganancia de su etapa, asi
+    que las cifras cuadran con lo que muestra la ficha.
+    """
+    capataz = usuarios_por_rol[RolUsuario.capataz]
+    fechas = [HOY - timedelta(days=dias) for dias in (182, 140, 96, 51, 3)]
+
+    for arete, _n, _s, _r, _nac, _e, grupo, _p, peso_texto, *_resto in ANIMALES:
+        animal = animales_creados[arete]
+        ganancia = GANANCIA_POR_ETAPA[etapa_de(arete, grupo)]
+        peso_final = Decimal(peso_texto)
+
+        anterior = None
+        for indice, fecha in enumerate(fechas):
+            dias_atras = (fechas[-1] - fecha).days
+            peso = (peso_final - ganancia * dias_atras).quantize(Decimal("0.1"))
+            if peso <= 0:
+                continue
+
+            registro = Pesaje(
+                finca_id=finca_id,
+                animal_id=animal.id,
+                fecha_pesaje=fecha,
+                peso_kg=peso,
+                metodo="bascula" if indice % 2 == 0 else "cinta",
+                responsable_id=capataz.id,
+            )
+            if anterior is not None:
+                dias = (fecha - anterior[0]).days
+                registro.ganancia_diaria_kg = round((peso - anterior[1]) / Decimal(dias), 3)
+            sesion.add(registro)
+            anterior = (fecha, peso)
+
+        # El ultimo pesaje manda sobre el peso de la ficha.
+        if anterior is not None:
+            animal.peso_actual_kg = anterior[1]
+
+
 def sembrar() -> None:
     sesion = FabricaSesion()
     try:
@@ -329,18 +391,20 @@ def sembrar() -> None:
         sesion.flush()
 
         clave = hashear_clave(CLAVE_DEMO)
+        usuarios_por_rol: dict[RolUsuario, Usuario] = {}
         for nombre, correo, rol, telefono in USUARIOS:
-            sesion.add(
-                Usuario(
-                    finca_id=finca.id,
-                    nombre_completo=nombre,
-                    correo=correo,
-                    clave_hash=clave,
-                    rol=rol,
-                    telefono=telefono,
-                    activo=True,
-                )
+            usuario = Usuario(
+                finca_id=finca.id,
+                nombre_completo=nombre,
+                correo=correo,
+                clave_hash=clave,
+                rol=rol,
+                telefono=telefono,
+                activo=True,
             )
+            sesion.add(usuario)
+            usuarios_por_rol[rol] = usuario
+        sesion.flush()
 
         potreros: dict[str, Potrero] = {}
         for nombre, hectareas, pasto, capacidad, descanso, en_descanso in POTREROS:
@@ -420,7 +484,13 @@ def sembrar() -> None:
             if padre:
                 creados[arete].padre_id = creados[padre].id
 
+        sembrar_pesajes(sesion, finca.id, creados, usuarios_por_rol)
         sesion.commit()
+
+        # La vista de inventario se refresca con debounce y nadie va a escribir
+        # justo despues de sembrar: se refresca aqui para que la pantalla de
+        # inventario tenga datos desde el primer arranque.
+        inventario.refrescar_ahora()
 
         print(f"Finca «{finca.nombre}» lista.")
         print(f"  {len(USUARIOS)} usuarios, clave «{CLAVE_DEMO}» para los tres:")

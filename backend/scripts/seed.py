@@ -18,7 +18,20 @@ import sqlalchemy as sa
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.modelos import Animal, Finca, Grupo, Pesaje, Potrero, Usuario  # noqa: E402
+from app.modelos import (  # noqa: E402
+    Animal,
+    Bano,
+    BanoAnimal,
+    CatalogoProductoBano,
+    CatalogoVacuna,
+    Finca,
+    Grupo,
+    Pesaje,
+    Potrero,
+    Usuario,
+    Vacunacion,
+    VacunacionAnimal,
+)
 from app.modelos.enumeraciones import (  # noqa: E402
     EstadoAnimal,
     EtapaGrupo,
@@ -369,6 +382,127 @@ def sembrar_pesajes(sesion, finca_id, animales_creados: dict, usuarios_por_rol: 
             animal.peso_actual_kg = anterior[1]
 
 
+# nombre, enfermedad, laboratorio, dias de refuerzo, dias de carencia, obligatoria
+VACUNAS = [
+    ("Aftosa", "Fiebre aftosa", "Vecol", 180, 0, True),
+    ("Carbón sintomático", "Carbón sintomático", "Zoetis", 365, 0, True),
+    ("Brucelosis", "Brucelosis bovina", "Vecol", None, 0, True),
+    ("Triple bovina", "Rinotraqueítis, diarrea viral y parainfluenza", "MSD", 365, 0, False),
+]
+
+# nombre, principio activo, tipo, carencia carne, carencia leche, reaplicacion
+PRODUCTOS_BANO = [
+    ("Garrapaticida Amitraz", "Amitraz 12,5%", "garrapaticida", 21, 3, 30),
+    ("Mosquicida Cipermetrina", "Cipermetrina 15%", "mosquicida", 14, 2, 45),
+]
+
+
+def sembrar_sanidad(sesion, finca_id, grupos: dict, animales_creados: dict, usuarios: dict) -> None:
+    """Catalogos y unas cuantas aplicaciones, con su membresia congelada.
+
+    Sin esto la pantalla de sanidad nace vacia y no se entiende para que sirve.
+    """
+    veterinario = usuarios[RolUsuario.veterinario]
+
+    catalogo_vacunas: dict[str, CatalogoVacuna] = {}
+    for nombre, enfermedad, laboratorio, refuerzo, carencia, obligatoria in VACUNAS:
+        vacuna = CatalogoVacuna(
+            finca_id=finca_id,
+            nombre=nombre,
+            enfermedad=enfermedad,
+            laboratorio=laboratorio,
+            via_aplicacion="subcutánea",
+            dosis_ml=Decimal("5.00"),
+            dias_refuerzo=refuerzo,
+            dias_carencia=carencia,
+            obligatoria=obligatoria,
+        )
+        sesion.add(vacuna)
+        catalogo_vacunas[nombre] = vacuna
+
+    catalogo_banos: dict[str, CatalogoProductoBano] = {}
+    for nombre, activo, tipo, carne, leche, reaplicacion in PRODUCTOS_BANO:
+        producto = CatalogoProductoBano(
+            finca_id=finca_id,
+            nombre=nombre,
+            principio_activo=activo,
+            laboratorio="Agrovet",
+            tipo=tipo,
+            dosis_por_litro_ml=Decimal("2.00"),
+            dias_carencia_carne=carne,
+            dias_carencia_leche=leche,
+            dias_reaplicacion=reaplicacion,
+        )
+        sesion.add(producto)
+        catalogo_banos[nombre] = producto
+    sesion.flush()
+
+    def animales_de(grupo_nombre: str) -> list:
+        objetivo = grupos[grupo_nombre].id
+        return [a for a in animales_creados.values() if a.grupo_id == objetivo]
+
+    # Aftosa al hato completo hace cuatro meses: el refuerzo ya esta encima.
+    aplicaciones = [
+        ("Aftosa", None, HOY - timedelta(days=124)),
+        ("Carbón sintomático", "Levante Norte", HOY - timedelta(days=61)),
+        ("Triple bovina", "Vientres A", HOY - timedelta(days=38)),
+    ]
+    for nombre_vacuna, grupo_nombre, fecha in aplicaciones:
+        vacuna = catalogo_vacunas[nombre_vacuna]
+        objetivo = animales_de(grupo_nombre) if grupo_nombre else list(animales_creados.values())
+        registro = Vacunacion(
+            finca_id=finca_id,
+            catalogo_vacuna_id=vacuna.id,
+            grupo_id=grupos[grupo_nombre].id if grupo_nombre else None,
+            fecha_aplicacion=fecha,
+            proxima_dosis_fecha=(
+                fecha + timedelta(days=vacuna.dias_refuerzo) if vacuna.dias_refuerzo else None
+            ),
+            dosis_ml=vacuna.dosis_ml,
+            lote_producto=f"L-{fecha.year}{fecha.month:02d}",
+            cantidad_animales=len(objetivo),
+            costo_total=Decimal("1.80") * len(objetivo),
+            responsable_id=veterinario.id,
+        )
+        sesion.add(registro)
+        sesion.flush()
+        sesion.add_all(
+            [
+                VacunacionAnimal(finca_id=finca_id, vacunacion_id=registro.id, animal_id=a.id)
+                for a in objetivo
+            ]
+        )
+
+    # Baño garrapaticida al levante, ya vencido; y uno reciente a los vientres.
+    for nombre_producto, grupo_nombre, dias in [
+        ("Garrapaticida Amitraz", "Levante Norte", 44),
+        ("Garrapaticida Amitraz", "Vientres A", 12),
+    ]:
+        producto = catalogo_banos[nombre_producto]
+        objetivo = animales_de(grupo_nombre)
+        if not objetivo:
+            continue
+        fecha = HOY - timedelta(days=dias)
+        registro = Bano(
+            finca_id=finca_id,
+            producto_id=producto.id,
+            grupo_id=grupos[grupo_nombre].id,
+            fecha_bano=fecha,
+            proxima_fecha=fecha + timedelta(days=producto.dias_reaplicacion),
+            metodo="aspersión",
+            dosis_total_ml=Decimal("2.00") * 400,
+            litros_agua=Decimal("400"),
+            cantidad_animales=len(objetivo),
+            costo_total=Decimal("0.90") * len(objetivo),
+            responsable_id=veterinario.id,
+        )
+        sesion.add(registro)
+        sesion.flush()
+        sesion.add_all(
+            [BanoAnimal(finca_id=finca_id, bano_id=registro.id, animal_id=a.id) for a in objetivo]
+        )
+
+
 def sembrar() -> None:
     sesion = FabricaSesion()
     try:
@@ -485,6 +619,7 @@ def sembrar() -> None:
                 creados[arete].padre_id = creados[padre].id
 
         sembrar_pesajes(sesion, finca.id, creados, usuarios_por_rol)
+        sembrar_sanidad(sesion, finca.id, grupos, creados, usuarios_por_rol)
         sesion.commit()
 
         # La vista de inventario se refresca con debounce y nadie va a escribir
@@ -497,6 +632,7 @@ def sembrar() -> None:
         for _, correo, rol, _ in USUARIOS:
             print(f"    {correo:32} {rol.value}")
         print(f"  {len(POTREROS)} potreros, {len(GRUPOS)} grupos, {len(ANIMALES)} animales.")
+        print(f"  {len(VACUNAS)} vacunas y {len(PRODUCTOS_BANO)} productos en catalogo.")
     except Exception:
         sesion.rollback()
         raise

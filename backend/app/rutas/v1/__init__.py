@@ -9,6 +9,7 @@ from app.rutas.v1 import (
     inventario,
     pesajes,
     potreros,
+    sanidad,
 )
 
 router_v1 = APIRouter(prefix="/api/v1")
@@ -18,3 +19,7 @@ router_v1.include_router(grupos.router)
 router_v1.include_router(potreros.router)
 router_v1.include_router(pesajes.router)
 router_v1.include_router(inventario.router)
+router_v1.include_router(sanidad.router_vacunas)
+router_v1.include_router(sanidad.router_vacunaciones)
+router_v1.include_router(sanidad.router_productos)
+router_v1.include_router(sanidad.router_banos)

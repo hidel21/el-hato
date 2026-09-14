@@ -9,7 +9,7 @@ from datetime import date
 from decimal import Decimal
 
 import sqlalchemy as sa
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.modelos.base import ConIdentificador, DeFinca, Sincronizable
 from app.nucleo.base_datos import Base
@@ -69,6 +69,10 @@ class Vacunacion(ConIdentificador, Sincronizable, DeFinca, Base):
     )
     observaciones: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
 
+    catalogo = relationship("CatalogoVacuna", lazy="joined", foreign_keys=[catalogo_vacuna_id])
+    animal = relationship("Animal", lazy="joined", foreign_keys=[animal_id])
+    grupo = relationship("Grupo", lazy="joined", foreign_keys=[grupo_id])
+
 
 class VacunacionAnimal(ConIdentificador, Sincronizable, DeFinca, Base):
     __tablename__ = "vacunacion_animales"
@@ -89,6 +93,8 @@ class VacunacionAnimal(ConIdentificador, Sincronizable, DeFinca, Base):
     animal_id: Mapped[uuid.UUID] = mapped_column(
         sa.Uuid, sa.ForeignKey("animales.id", ondelete="CASCADE"), nullable=False, index=True
     )
+
+    animal = relationship("Animal", lazy="joined", foreign_keys=[animal_id])
 
 
 class CatalogoProductoBano(ConIdentificador, Sincronizable, DeFinca, Base):
@@ -146,6 +152,10 @@ class Bano(ConIdentificador, Sincronizable, DeFinca, Base):
     )
     observaciones: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
 
+    producto = relationship("CatalogoProductoBano", lazy="joined", foreign_keys=[producto_id])
+    grupo = relationship("Grupo", lazy="joined", foreign_keys=[grupo_id])
+    potrero = relationship("Potrero", lazy="joined", foreign_keys=[potrero_id])
+
 
 class BanoAnimal(ConIdentificador, Sincronizable, DeFinca, Base):
     __tablename__ = "bano_animales"
@@ -166,3 +176,5 @@ class BanoAnimal(ConIdentificador, Sincronizable, DeFinca, Base):
     animal_id: Mapped[uuid.UUID] = mapped_column(
         sa.Uuid, sa.ForeignKey("animales.id", ondelete="CASCADE"), nullable=False, index=True
     )
+
+    animal = relationship("Animal", lazy="joined", foreign_keys=[animal_id])
